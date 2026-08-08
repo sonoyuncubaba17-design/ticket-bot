@@ -83,7 +83,7 @@ function createSelectMenu() {
 client.once("ready", () => {
   console.log(`✅ ${client.user.tag} aktif!`);
 
-  client.user.setActivity("dadas ❤️ efecan", {
+  client.user.setActivity("dadascxn 🤍 efecan", {
     type: 3 // İzliyor
   });
 });
