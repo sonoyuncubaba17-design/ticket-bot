@@ -36,7 +36,7 @@ const config = {
   transcriptLog: process.env.TRANSCRIPT_LOG,
   categoryId: process.env.CATEGORY_ID,
   gifUrl: "https://cdn.discordapp.com/attachments/1535547742397399121/1535659790846402621/DS_hizli_kar.gif?ex=6a789221&is=6a7740a1&hm=24b5cc21dde58dc6418e0d86fc4494f4dc2476e711b5d3acc60929d2fe56397a&",
-  voiceChannelName: "724"
+  voiceChannelId: "1535776380631916555" // Kalıcı ses kanalı
 };
 
 const dataPath = path.join(__dirname, 'data.json');
@@ -232,13 +232,11 @@ client.once("ready", async () => {
   console.log(`✅ ${client.user.tag} aktif!`);
   client.user.setActivity("dadascxn 🤍 efecan", { type: 3 });
 
-  // 724 ses kanalına otomatik gir ve çıkma
+  // Belirtilen ses kanalına kalıcı olarak gir
   const guild = client.guilds.cache.get(process.env.GUILD_ID);
   if (guild) {
-    const voiceChannel = guild.channels.cache.find(c => 
-      c.type === ChannelType.GuildVoice && c.name.toLowerCase().includes(config.voiceChannelName.toLowerCase())
-    );
-    if (voiceChannel) {
+    const voiceChannel = guild.channels.cache.get(config.voiceChannelId);
+    if (voiceChannel && voiceChannel.type === ChannelType.GuildVoice) {
       try {
         joinVoiceChannel({
           channelId: voiceChannel.id,
@@ -247,10 +245,12 @@ client.once("ready", async () => {
           selfDeaf: true,
           selfMute: true
         });
-        console.log(`🔊 ${voiceChannel.name} ses kanalına bağlandı.`);
+        console.log(`🔊 Ses kanalına bağlandı: ${voiceChannel.name}`);
       } catch (e) {
         console.log("Ses kanalına bağlanırken hata:", e.message);
       }
+    } else {
+      console.log("Ses kanalı bulunamadı veya ses kanalı değil.");
     }
   }
 
