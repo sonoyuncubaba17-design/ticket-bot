@@ -94,24 +94,40 @@ client.on("interactionCreate", async (interaction) => {
     if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
       return interaction.reply({ content: "Bu komutu sadece yöneticiler kullanabilir.", ephemeral: true });
     }
-// /mesaj komutu
+// 1. /panel komutu
+client.on("interactionCreate", async (interaction) => {
+  if (!interaction.isChatInputCommand()) return;
+
+  if (interaction.commandName === "panel") {
+    if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
+      return interaction.reply({ content: "Bu komutu sadece yöneticiler kullanabilir.", ephemeral: true });
+    }
+
+    await interaction.channel.send({
+      embeds: [createPanelEmbed()],
+      components: [createSelectMenu()]
+    });
+
+    await interaction.reply({ content: "Panel gönderildi!", ephemeral: true });
+  }
+});
+
+  // 2. /mesaj komutu
 client.on("interactionCreate", async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
   if (interaction.commandName !== "mesaj") return;
 
-  // Sadece ticket kanalında çalışsın
+  await interaction.deferReply({ ephemeral: true });
+
   if (!interaction.channel.topic?.startsWith("ticket-")) {
-    return interaction.reply({
-      content: "Bu komut sadece ticket kanallarında kullanılabilir.",
-      ephemeral: true
+    return interaction.editReply({
+      content: "Bu komut sadece ticket kanallarında kullanılabilir."
     });
   }
 
-  // Sadece yetkililer kullanabilsin
   if (!interaction.member.roles.cache.has(config.staffRole)) {
-    return interaction.reply({
-      content: "Bu komutu sadece destek yetkilileri kullanabilir.",
-      ephemeral: true
+    return interaction.editReply({
+      content: "Bu komutu sadece destek yetkilileri kullanabilir."
     });
   }
 
@@ -121,6 +137,70 @@ client.on("interactionCreate", async (interaction) => {
   try {
     const owner = await client.users.fetch(ownerId);
 
+    const dmEmbed = new EmbedBuilder()
+      .setColor("#5865F2")
+      .setTitle("📩 Destek Ekibinden Mesaj")
+      .setDescription(mesaj)
+      .setFooter({ text: `${interaction.guild.name} • ${interaction.user.tag}` })
+      .setTimestamp();
+
+    await owner.send({ embeds: [dmEmbed] });
+
+    await interaction.editReply({
+      content: `Mesaj başarıyla **${owner.tag}** kişisine gönderildi.`
+    });
+
+  } catch (err) {
+    console.log("DM gönderme hatası:", err.message);
+    await interaction.editReply({
+      content: "Mesaj gönderilemedi. Kullanıcının DM'leri kapalı olabilir."
+    });
+  }
+});
+  // 3. /ekle komutu  ← Bunu en alta ekle
+client.on("interactionCreate", async (interaction) => {
+  if (!interaction.isChatInputCommand()) return;
+  if (interaction.commandName !== "ekle") return;
+
+  await interaction.deferReply({ ephemeral: true });
+
+  if (!interaction.channel.topic?.startsWith("ticket-")) {
+    return interaction.editReply({
+      content: "Bu komut sadece ticket kanallarında kullanılabilir."
+    });
+  }
+
+  if (!interaction.member.roles.cache.has(config.staffRole)) {
+    return interaction.editReply({
+      content: "Bu komutu sadece destek yetkilileri kullanabilir."
+    });
+  }
+
+  const user = interaction.options.getUser("kisi");
+
+  try {
+    await interaction.channel.permissionOverwrites.edit(user.id, {
+      ViewChannel: true,
+      SendMessages: true,
+      AttachFiles: true,
+      ReadMessageHistory: true
+    });
+
+    await interaction.editReply({
+      content: `${user} başarıyla ticket'a eklendi.`
+    });
+
+    await interaction.channel.send({
+      content: `${user} bu ticket'a eklendi. (${interaction.user} tarafından)`
+    });
+
+  } catch (err) {
+    console.log("Üye ekleme hatası:", err.message);
+    await interaction.editReply({
+      content: "Kişi eklenirken bir hata oluştu."
+    });
+  }
+});
     const dmEmbed = new EmbedBuilder()
       .setColor("#5865F2")
       .setTitle("📩 Destek Ekibinden Mesaj")
@@ -297,7 +377,7 @@ client.on("interactionCreate", async (interaction) => {
 });
 
 client.on("ready", async () => {
- const data = [
+const data = [
   {
     name: "panel",
     description: "Ticket panelini gönderir"
@@ -309,7 +389,19 @@ client.on("ready", async () => {
       {
         name: "mesaj",
         description: "Göndermek istediğin mesaj",
-        type: 3, // STRING
+        type: 3,
+        required: true
+      }
+    ]
+  },
+  {
+    name: "ekle",
+    description: "Ticket'a bir üye ekler",
+    options: [
+      {
+        name: "kisi",
+        description: "Eklemek istediğin kişi",
+        type: 6, // USER
         required: true
       }
     ]
