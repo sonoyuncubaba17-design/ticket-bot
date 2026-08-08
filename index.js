@@ -91,7 +91,55 @@ client.on("interactionCreate", async (interaction) => {
     if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
       return interaction.reply({ content: "Bu komutu sadece yöneticiler kullanabilir.", ephemeral: true });
     }
+// /mesaj komutu
+client.on("interactionCreate", async (interaction) => {
+  if (!interaction.isChatInputCommand()) return;
+  if (interaction.commandName !== "mesaj") return;
 
+  // Sadece ticket kanalında çalışsın
+  if (!interaction.channel.topic?.startsWith("ticket-")) {
+    return interaction.reply({
+      content: "Bu komut sadece ticket kanallarında kullanılabilir.",
+      ephemeral: true
+    });
+  }
+
+  // Sadece yetkililer kullanabilsin
+  if (!interaction.member.roles.cache.has(config.staffRole)) {
+    return interaction.reply({
+      content: "Bu komutu sadece destek yetkilileri kullanabilir.",
+      ephemeral: true
+    });
+  }
+
+  const mesaj = interaction.options.getString("mesaj");
+  const ownerId = interaction.channel.topic.split("-")[1];
+
+  try {
+    const owner = await client.users.fetch(ownerId);
+
+    const dmEmbed = new EmbedBuilder()
+      .setColor("#5865F2")
+      .setTitle("📩 Destek Ekibinden Mesaj")
+      .setDescription(mesaj)
+      .setFooter({ text: `${interaction.guild.name} • ${interaction.user.tag}` })
+      .setTimestamp();
+
+    await owner.send({ embeds: [dmEmbed] });
+
+    await interaction.reply({
+      content: `Mesaj başarıyla **${owner.tag}** kişisine gönderildi.`,
+      ephemeral: true
+    });
+
+  } catch (err) {
+    console.log("DM gönderme hatası:", err.message);
+    await interaction.reply({
+      content: "Mesaj gönderilemedi. Kullanıcının DM'leri kapalı olabilir.",
+      ephemeral: true
+    });
+  }
+});
     await interaction.channel.send({
       embeds: [createPanelEmbed()],
       components: [createSelectMenu()]
@@ -246,12 +294,24 @@ client.on("interactionCreate", async (interaction) => {
 });
 
 client.on("ready", async () => {
-  const data = [
-    {
-      name: "panel",
-      description: "Ticket panelini gönderir"
-    }
-  ];
+ const data = [
+  {
+    name: "panel",
+    description: "Ticket panelini gönderir"
+  },
+  {
+    name: "mesaj",
+    description: "Ticket sahibine özel mesaj gönderir (sadece ticket kanalında)",
+    options: [
+      {
+        name: "mesaj",
+        description: "Göndermek istediğin mesaj",
+        type: 3, // STRING
+        required: true
+      }
+    ]
+  }
+];
 
   const guild = client.guilds.cache.get(process.env.GUILD_ID);
   if (guild) {
