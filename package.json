@@ -1,17 +1,21 @@
 {
   "name": "ticket-bot",
   "version": "1.0.0",
-  "description": "",
+  "description": "DS SYSTEM Ticket Bot",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node index.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "discord.js": "^14.27.0",
-    "dotenv": "^17.4.2"
+    "discord.js": "^14.16.3",
+    "dotenv": "^16.4.5",
+    "@discordjs/voice": "^0.17.0",
+    "@discordjs/opus": "^0.9.0",
+    "libsodium-wrappers": "^0.7.13",
+    "ffmpeg-static": "^5.2.0"
   }
 }
