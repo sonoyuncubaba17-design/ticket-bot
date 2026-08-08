@@ -207,29 +207,59 @@ client.on("interactionCreate", async (interaction) => {
         return interaction.reply({ content: "Bu komutu sadece yöneticiler kullanabilir.", ephemeral: true });
       }
 
+      // Aktif yetkili sayısını hesapla
+      const staffRole = interaction.guild.roles.cache.get(config.staffRole);
+      const aktifYetkili = staffRole ? staffRole.members.filter(m => m.presence?.status === "online" || m.presence?.status === "idle" || m.presence?.status === "dnd").size : 0;
+
+      // Açık ticket sayısını hesapla
+      const acikTicket = interaction.guild.channels.cache.filter(c => c.parentId === config.categoryId && c.topic?.startsWith("ticket-")).size;
+
       const embed = new EmbedBuilder()
         .setColor("#e74c3c")
         .setAuthor({ name: "DS SYSTEM", iconURL: client.user.displayAvatarURL() })
-        .setTitle("🔴 DS SYSTEM Sunucu Aktif!")
-        .setDescription("Merhaba, **DS SYSTEM** sunucusu sorunsuz bir şekilde aktif!")
+        .setTitle("🔴 DS SYSTEM Aktif!")
+        .setDescription("Sistem sorunsuz şekilde çalışıyor.")
         .addFields(
           {
-            name: "🔗 Hızlı Bağlantılar",
-            value: "• [Kurallar](https://ornek.com/kurallar)\n• [Forum](https://ornek.com/forum)\n• [UCP & Bakiye](https://ornek.com/ucp)",
-            inline: false
+            name: "👥 Aktif Yetkili",
+            value: `\`${aktifYetkili}\``,
+            inline: true
           },
           {
-            name: "📊 İstatistikler",
-            value: "**Gecikme:** `32ms`\n**IP Adresi:** `178.33.54.30:22003`\n**Oyuncu Sayısı:** `40/300`\n**Giriş:** 🔓 Serbest",
-            inline: false
+            name: "🎫 Açık Ticket",
+            value: `\`${acikTicket}\``,
+            inline: true
+          },
+          {
+            name: "👤 Toplam Üye",
+            value: `\`${interaction.guild.memberCount}\``,
+            inline: true
+          },
+          {
+            name: "🤖 Bot Durumu",
+            value: "`🟢 Çevrimiçi`",
+            inline: true
+          },
+          {
+            name: "⏰ Çalışma Süresi",
+            value: `<t:${Math.floor(client.readyTimestamp / 1000)}:R>`,
+            inline: true
           }
         )
         .setImage(config.gifUrl)
-        .setFooter({ text: "DS SYSTEM • kizilgaming.com" })
+        .setFooter({ text: "DS SYSTEM • Discord Bot" })
         .setTimestamp();
 
+      // Komut yazılan kanala at
       await interaction.channel.send({ embeds: [embed] });
-      return interaction.reply({ content: "Aktif mesajı gönderildi!", ephemeral: true });
+
+      // Everywhere kanalına da otomatik at
+      const everywhereChannel = interaction.guild.channels.cache.find(c => c.name.toLowerCase().includes("everywhere"));
+      if (everywhereChannel) {
+        await everywhereChannel.send({ embeds: [embed] });
+      }
+
+      return interaction.reply({ content: "Aktif mesajı gönderildi! (everywhere kanalına da atıldı)", ephemeral: true });
     }
   }
 
