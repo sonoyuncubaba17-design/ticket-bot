@@ -105,6 +105,8 @@ client.on("interactionCreate", async (interaction) => {
   if (!interaction.isStringSelectMenu()) return;
   if (interaction.customId !== "ticket_select") return;
 
+  await interaction.deferReply({ ephemeral: true });
+
   const category = interaction.values[0];
   const user = interaction.user;
 
