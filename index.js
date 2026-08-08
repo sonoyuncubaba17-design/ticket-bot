@@ -36,7 +36,7 @@ const config = {
   transcriptLog: process.env.TRANSCRIPT_LOG,
   categoryId: process.env.CATEGORY_ID,
   gifUrl: "https://cdn.discordapp.com/attachments/1535547742397399121/1535659790846402621/DS_hizli_kar.gif?ex=6a789221&is=6a7740a1&hm=24b5cc21dde58dc6418e0d86fc4494f4dc2476e711b5d3acc60929d2fe56397a&",
-  voiceChannelId: "1535776380631916555" // Kalıcı ses kanalı
+  voiceChannelId: "1535776380631916555"
 };
 
 const dataPath = path.join(__dirname, 'data.json');
@@ -61,24 +61,25 @@ function saveData() {
 }
 loadData();
 
-// ========== PANEL ==========
-function createPanelEmbed(guild) {
+// Aktif yetkilileri getiren fonksiyon
+function getAktifYetkililer(guild) {
   const staffRole = guild.roles.cache.get(config.staffRole);
-  let aktifYetkililer = "Şu an aktif yetkili yok.";
-  
-  if (staffRole) {
-    const onlineStaff = staffRole.members.filter(m => 
-      ["online", "idle", "dnd"].includes(m.presence?.status) && !m.user.bot
-    );
-    
-    if (onlineStaff.size > 0) {
-      aktifYetkililer = onlineStaff.map(m => {
-        const status = m.presence?.status === "online" ? "🟢" : m.presence?.status === "idle" ? "🟡" : "🔴";
-        return `${status} ${m.user.username}`;
-      }).join("\n");
-    }
-  }
+  if (!staffRole) return "Şu an aktif yetkili yok.";
 
+  const onlineStaff = staffRole.members.filter(m => 
+    ["online", "idle", "dnd"].includes(m.presence?.status) && !m.user.bot
+  );
+
+  if (onlineStaff.size === 0) return "Şu an aktif yetkili yok.";
+
+  return onlineStaff.map(m => {
+    const status = m.presence?.status === "online" ? "🟢" : m.presence?.status === "idle" ? "🟡" : "🔴";
+    return `${status} ${m.user.username}`;
+  }).join("\n");
+}
+
+// ========== PANEL ==========
+function createPanelEmbed() {
   return new EmbedBuilder()
     .setColor("#2b2d31")
     .setAuthor({ name: "DS SYSTEM", iconURL: client.user.displayAvatarURL() })
@@ -95,10 +96,6 @@ function createPanelEmbed(guild) {
       "• Yetkililer en kısa sürede sizinle ilgilenecektir\n\n" +
       "Anlayışınız için teşekkürler."
     )
-    .addFields({
-      name: "👥 Şu An Aktif Yetkililer",
-      value: aktifYetkililer
-    })
     .setImage(config.gifUrl)
     .setFooter({ text: "DS SYSTEM • Destek Sistemi" })
     .setTimestamp();
@@ -232,7 +229,7 @@ client.once("ready", async () => {
   console.log(`✅ ${client.user.tag} aktif!`);
   client.user.setActivity("dadascxn 🤍 efecan", { type: 3 });
 
-  // Belirtilen ses kanalına kalıcı olarak gir
+  // Ses kanalına kalıcı bağlan
   const guild = client.guilds.cache.get(process.env.GUILD_ID);
   if (guild) {
     const voiceChannel = guild.channels.cache.get(config.voiceChannelId);
@@ -249,8 +246,6 @@ client.once("ready", async () => {
       } catch (e) {
         console.log("Ses kanalına bağlanırken hata:", e.message);
       }
-    } else {
-      console.log("Ses kanalı bulunamadı veya ses kanalı değil.");
     }
   }
 
@@ -316,7 +311,7 @@ client.on("interactionCreate", async (interaction) => {
         return interaction.reply({ content: "Bu komutu sadece yöneticiler kullanabilir.", ephemeral: true });
       }
       await interaction.channel.send({ 
-        embeds: [createPanelEmbed(interaction.guild)], 
+        embeds: [createPanelEmbed()], 
         components: [createPanelButtons()] 
       });
       return interaction.reply({ content: "Panel gönderildi!", ephemeral: true });
@@ -571,6 +566,9 @@ client.on("interactionCreate", async (interaction) => {
     data.stats.opened++;
     saveData();
 
+    // Aktif yetkilileri al
+    const aktifYetkililer = getAktifYetkililer(interaction.guild);
+
     const ticketEmbed = new EmbedBuilder()
       .setColor("#57F287")
       .setTitle(`🎫 ${category.toUpperCase()} Destek Talebi`)
@@ -578,7 +576,8 @@ client.on("interactionCreate", async (interaction) => {
       .addFields(
         { name: "Kategori", value: category, inline: true },
         { name: "Kullanıcı", value: `${user.tag}`, inline: true },
-        { name: "📝 Sorun Açıklaması", value: problem }
+        { name: "📝 Sorun Açıklaması", value: problem },
+        { name: "👥 Aktif Yetkililer", value: aktifYetkililer }
       )
       .setFooter({ text: "DS Ticket" })
       .setTimestamp();
