@@ -193,10 +193,9 @@ client.on("interactionCreate", async (interaction) => {
     logChannel.send({ embeds: [logEmbed] });
   }
 
-  await interaction.reply({
-    content: `Ticket'ın oluşturuldu → ${channel}`,
-    ephemeral: true
-  });
+  await interaction.editReply({
+  content: `Ticket'ın oluşturuldu → ${channel}`
+});
 });
 
 client.on("interactionCreate", async (interaction) => {
