@@ -339,4 +339,30 @@ client.on("guildMemberAdd", async (member) => {
     console.log(`${member.user.tag} kişisine DM gönderilemedi (muhtemelen DM'leri kapalı).`);
   }
 });
+client.on("ready", async () => {
+  const data = [
+    {
+      name: "panel",
+      description: "Ticket panelini gönderir"
+    },
+    {
+      name: "mesaj",
+      description: "Ticket sahibine özel mesaj gönderir (sadece ticket kanalında)",
+      options: [
+        {
+          name: "mesaj",
+          description: "Göndermek istediğin mesaj",
+          type: 3,
+          required: true
+        }
+      ]
+    }
+  ];
+
+  const guild = client.guilds.cache.get(process.env.GUILD_ID);
+  if (guild) {
+    await guild.commands.set(data);
+    console.log("Slash komutlar yüklendi.");
+  }
+});
 client.login(process.env.TOKEN);
