@@ -207,7 +207,11 @@ client.on("interactionCreate", async (interaction) => {
       .setDescription(mesaj)
       .setFooter({ text: `${interaction.guild.name} • ${interaction.user.tag}` })
       .setTimestamp();
-
+try {
+  // kod
+} catch (err) {
+  // hata yakalama
+}
     await owner.send({ embeds: [dmEmbed] });
 
     await interaction.reply({
