@@ -35,7 +35,7 @@ const config = {
 function createPanelEmbed() {
   return new EmbedBuilder()
     .setColor("#2b2d31")
-    .setAuthor({ name: "DS Destek ", iconURL: client.user.displayAvatarURL() })
+    .setAuthor({ name: "DS SYSTEM ", iconURL: client.user.displayAvatarURL() })
     .setDescription(
       "Ürünlerimiz, hizmetlerimiz ve servislerimiz hakkında bilgi edinmek, destek talep etmek vb. işlemler için aşağıdaki menüden seçtiğiniz uygun kategori ile destek talebi oluşturabilirsiniz.\n\n" +
       "**Belirlenen saatler dışında destek talebine bakılmamaktadır.**\n" +
