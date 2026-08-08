@@ -158,7 +158,7 @@ client.on("interactionCreate", async (interaction) => {
     .setTitle(`🎫 ${category.toUpperCase()} Destek Talebi`)
     .setDescription(`Merhaba ${user},\n\nDestek talebin oluşturuldu. Yetkililer en kısa sürede seninle ilgilenecek.\n\nLütfen sorununuzu detaylı bir şekilde anlat.`)
     .addFields({ name: "Kategori", value: category, inline: true })
-    .setFooter({ text: "Luthi Ware Destek Sistemi" })
+    .setFooter({ text: "Dadas Fy Pack Destek Sistemi" })
     .setTimestamp();
 
   const buttons = new ActionRowBuilder().addComponents(
