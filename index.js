@@ -35,14 +35,14 @@ const config = {
 function createPanelEmbed() {
   return new EmbedBuilder()
     .setColor("#2b2d31")
-    .setAuthor({ name: "Dadas DS Pack | Destek Hattı", iconURL: client.user.displayAvatarURL() })
+    .setAuthor({ name: "𝑫𝒂𝒅𝒂𝒔 𝑫𝑺 𝑷𝒂𝒄𝒌 | Destek ", iconURL: client.user.displayAvatarURL() })
     .setDescription(
       "Ürünlerimiz, hizmetlerimiz ve servislerimiz hakkında bilgi edinmek, destek talep etmek vb. işlemler için aşağıdaki menüden seçtiğiniz uygun kategori ile destek talebi oluşturabilirsiniz.\n\n" +
       "**Belirlenen saatler dışında destek talebine bakılmamaktadır.**\n" +
       "Sohbetten **Destek talebine bakar mısınız?** gibi taleplerde bulunmanız süreci hızlandırmaz.\n\n" 
     )
     .setImage(config.gifUrl)
-    .setFooter({ text: "Saygılarımızla Dadas DS Pack #YENİ " })
+    .setFooter({ text: "Saygılarımızla 𝑫𝒂𝒅𝒂𝒔 𝑫𝑺 𝑷𝒂𝒄𝒌 #YENİ " })
     .setTimestamp();
 }
 
@@ -155,7 +155,7 @@ client.on("interactionCreate", async (interaction) => {
     .setTitle(`🎫 ${category.toUpperCase()} Destek Talebi`)
     .setDescription(`Merhaba ${user},\n\nDestek talebin oluşturuldu. Yetkililer en kısa sürede seninle ilgilenecek.\n\nLütfen sorununuzu detaylı bir şekilde anlat.`)
     .addFields({ name: "Kategori", value: category, inline: true })
-    .setFooter({ text: "Dadas Ds Pack Destek Sistemi" })
+    .setFooter({ text: "𝑫𝒂𝒅𝒂𝒔 𝑫𝑺 𝑷𝒂𝒄𝒌" })
     .setTimestamp();
 
   const buttons = new ActionRowBuilder().addComponents(
