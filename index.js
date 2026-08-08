@@ -56,25 +56,25 @@ function createSelectMenu() {
           label: "Genel Destek",
           description: "Genel sorular ve yardım",
           value: "genel",
-          emoji: "https://cdn.discordapp.com/emojis/1535669368095121408.webp?size=96&animated=true"
+          emoji: "1535669368095121408"
         },
         {
           label: "Satış / Fiyat",
           description: "Ürün ve fiyat bilgisi",
           value: "satis",
-          emoji: "https://cdn.discordapp.com/emojis/1535669368095121408.webp?size=96&animated=true"
+          emoji: "1535669368095121408"
         },
         {
           label: "Teknik Destek",
           description: "Teknik sorunlar",
           value: "teknik",
-          emoji: "https://cdn.discordapp.com/emojis/1535669368095121408.webp?size=96&animated=true"
+          emoji: "1535669368095121408"
         },
         {
           label: "Şikayet / Öneri",
           description: "Şikayet veya öneri bildir",
           value: "sikayet",
-          emoji: "https://cdn.discordapp.com/emojis/1535669368095121408.webp?size=96&animated=true"
+          emoji: "1535669368095121408"
         }
       )
   );
