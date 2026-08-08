@@ -29,7 +29,7 @@ const config = {
   transcriptLog: process.env.TRANSCRIPT_LOG,
   categoryId: process.env.CATEGORY_ID,
   // Hareketli görsel (istersen değiştirebilirsin)
-  gifUrl: "https://cdn.discordapp.com/attachments/1535547742397399121/1535618220378292224/NGAH5.jpg?ex=6a786b6a&is=6a7719ea&hm=efbf36819617481f0dbd691c0c9d690c4e042e16e9d91be3afe1511aec302717&"
+  gifUrl: "https://cdn.discordapp.com/attachments/1535074576722296893/1535637436170768424/DS_hareketli.gif?ex=6a787d4f&is=6a772bcf&hm=c3f38b365559cf48a914fd5b0cb7f684a440b96ed4c889ec21a6eee78a78920d&"
 };
 
 function createPanelEmbed() {
