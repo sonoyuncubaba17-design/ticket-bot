@@ -35,7 +35,7 @@ const config = {
 function createPanelEmbed() {
   return new EmbedBuilder()
     .setColor("#2b2d31")
-    .setAuthor({ name: "Luthi Ware | Destek", iconURL: client.user.displayAvatarURL() })
+    .setAuthor({ name: "Dadas Fy Pack | Destek", iconURL: client.user.displayAvatarURL() })
     .setDescription(
       "Ürünlerimiz, hizmetlerimiz ve servislerimiz hakkında bilgi edinmek, destek talep etmek vb. işlemler için aşağıdaki menüden seçtiğiniz uygun kategori ile destek talebi oluşturabilirsiniz.\n\n" +
       "**Belirlenen saatler dışında destek talebine bakılmamaktadır.**\n" +
@@ -45,7 +45,7 @@ function createPanelEmbed() {
       "• Hafta Sonu: 08:00 - 22:00"
     )
     .setImage(config.gifUrl)
-    .setFooter({ text: "Saygılarımızla Luthi Ware" })
+    .setFooter({ text: "Saygılarımızla Dadas Fy Pack #YENİ " })
     .setTimestamp();
 }
 
