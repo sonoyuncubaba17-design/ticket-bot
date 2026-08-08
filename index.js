@@ -34,12 +34,10 @@ const config = {
   transcriptLog: process.env.TRANSCRIPT_LOG,
   categoryId: process.env.CATEGORY_ID,
   gifUrl: "https://cdn.discordapp.com/attachments/1535547742397399121/1535659790846402621/DS_hizli_kar.gif?ex=6a789221&is=6a7740a1&hm=24b5cc21dde58dc6418e0d86fc4494f4dc2476e711b5d3acc60929d2fe56397a&",
-  // Saat kısıtlaması (Türkiye saati)
-  ticketStartHour: 10,  // 10:00
-  ticketEndHour: 0      // 00:00 (gece yarısı)
+  ticketStartHour: 10,
+  ticketEndHour: 0
 };
 
-// ========== VERİ KAYDI ==========
 const dataPath = path.join(__dirname, 'data.json');
 let data = { blacklist: [], stats: { opened: 0, closed: 0, ratings: [], staffStats: {} } };
 
@@ -57,21 +55,19 @@ function saveData() {
 }
 loadData();
 
-// ========== PANEL ==========
 function createPanelEmbed() {
   return new EmbedBuilder()
     .setColor("#2b2d31")
     .setAuthor({ name: "DS SYSTEM", iconURL: client.user.displayAvatarURL() })
-  .setDescription(
-  "Ürünlerimiz, hizmetlerimiz ve servislerimiz hakkında detaylı bilgi almak, destek talebinde bulunmak, satış ve fiyat sorularınızı iletmek veya teknik sorunlarınızı bildirmek için aşağıdaki butonlardan size en uygun kategoriyi seçerek destek talebi oluşturabilirsiniz.\n\n" +
-  "**Önemli Bilgilendirme:**\n" +
-  "• Destek taleplerine sadece belirlenen saatler arasında bakılmaktadır. **(10:00 - 00:00)**\n" +
-  "• Bu saatler dışında açılan talepler, mesai saatleri başladığında sırayla incelenecektir.\n" +
-  "• Sohbet kanallarında *“Destek talebine bakar mısınız?”*, *“Yetkili var mı?”* gibi mesajlar atmanız süreci hızlandırmaz, aksine yavaşlatır.\n" +
-  "• Lütfen sorununuzu mümkün olduğunca detaylı ve açık bir şekilde yazın. Bu sayede size daha hızlı ve doğru yardım edebiliriz.\n" +
-  "• Aynı anda birden fazla ticket açmanız engellenmiştir. Mevcut talebiniz sonuçlanmadan yeni talep oluşturamazsınız.\n\n" +
-  "Anlayışınız için teşekkür eder, iyi günler dileriz."
-)
+    .setDescription(
+      "Ürünlerimiz, hizmetlerimiz ve servislerimiz hakkında detaylı bilgi almak, destek talebinde bulunmak, satış ve fiyat sorularınızı iletmek veya teknik sorunlarınızı bildirmek için aşağıdaki butonlardan size en uygun kategoriyi seçerek destek talebi oluşturabilirsiniz.\n\n" +
+      "**Önemli Bilgilendirme:**\n" +
+      "• Destek taleplerine sadece belirlenen saatler arasında bakılmaktadır. **(10:00 - 00:00)**\n" +
+      "• Bu saatler dışında açılan talepler, mesai saatleri başladığında sırayla incelenecektir.\n" +
+      "• Sohbet kanallarında *“Destek talebine bakar mısınız?”*, *“Yetkili var mı?”* gibi mesajlar atmanız süreci hızlandırmaz, aksine yavaşlatır.\n" +
+      "• Lütfen sorununuzu mümkün olduğunca detaylı ve açık bir şekilde yazın. Bu sayede size daha hızlı ve doğru yardım edebiliriz.\n" +
+      "• Aynı anda birden fazla ticket açmanız engellenmiştir. Mevcut talebiniz sonuçlanmadan yeni talep oluşturamazsınız.\n\n" +
+      "Anlayışınız için teşekkür eder, iyi günler dileriz."
     )
     .setImage(config.gifUrl)
     .setFooter({ text: "Saygılarımızla DS DiscordBot #YENİ" })
@@ -87,7 +83,6 @@ function createPanelButtons() {
   );
 }
 
-// ========== HTML TRANSCRIPT ==========
 function createHTMLTranscript(channel, messages) {
   let html = `
 <!DOCTYPE html>
@@ -123,20 +118,16 @@ function createHTMLTranscript(channel, messages) {
   return Buffer.from(html, 'utf-8');
 }
 
-// ========== SAAT KONTROLÜ ==========
 function isTicketTimeAllowed() {
   const now = new Date();
-  // Türkiye saati (UTC+3)
   const trHour = (now.getUTCHours() + 3) % 24;
   if (config.ticketStartHour < config.ticketEndHour) {
     return trHour >= config.ticketStartHour && trHour < config.ticketEndHour;
   } else {
-    // Gece yarısını geçen saatler (10:00 - 00:00)
     return trHour >= config.ticketStartHour || trHour < config.ticketEndHour;
   }
 }
 
-// ========== BOT READY ==========
 client.once("ready", async () => {
   console.log(`✅ ${client.user.tag} aktif!`);
   client.user.setActivity("dadascxn 🤍 efecan", { type: 3 });
@@ -158,7 +149,6 @@ client.once("ready", async () => {
     console.log("Slash komutlar yüklendi.");
   }
 
-  // 24 saat inaktif ticket kontrolü (her 15 dakikada bir)
   setInterval(async () => {
     const guild = client.guilds.cache.get(process.env.GUILD_ID);
     if (!guild) return;
@@ -171,9 +161,8 @@ client.once("ready", async () => {
         if (!lastMsg) continue;
 
         const diff = Date.now() - lastMsg.createdTimestamp;
-        if (diff > 24 * 60 * 60 * 1000) { // 24 saat
+        if (diff > 24 * 60 * 60 * 1000) {
           await channel.send("⏰ 24 saattir cevap gelmediği için ticket otomatik kapatılıyor...");
-          // Transcript + silme
           const allMsgs = await channel.messages.fetch({ limit: 100 });
           const htmlBuffer = createHTMLTranscript(channel, allMsgs);
           const attachment = new AttachmentBuilder(htmlBuffer, { name: `transcript-${channel.name}.html` });
@@ -190,13 +179,10 @@ client.once("ready", async () => {
   }, 15 * 60 * 1000);
 });
 
-// ========== INTERACTION ==========
 client.on("interactionCreate", async (interaction) => {
 
-  // ==================== SLASH KOMUTLAR ====================
   if (interaction.isChatInputCommand()) {
 
-    // /panel
     if (interaction.commandName === "panel") {
       if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
         return interaction.reply({ content: "Bu komutu sadece yöneticiler kullanabilir.", ephemeral: true });
@@ -205,7 +191,6 @@ client.on("interactionCreate", async (interaction) => {
       return interaction.reply({ content: "Panel gönderildi!", ephemeral: true });
     }
 
-    // /mesaj
     if (interaction.commandName === "mesaj") {
       await interaction.deferReply({ ephemeral: true });
       if (!interaction.channel.topic?.startsWith("ticket-")) return interaction.editReply({ content: "Sadece ticket kanallarında kullanılabilir." });
@@ -223,7 +208,6 @@ client.on("interactionCreate", async (interaction) => {
       return;
     }
 
-    // /ekle
     if (interaction.commandName === "ekle") {
       await interaction.deferReply({ ephemeral: true });
       if (!interaction.channel.topic?.startsWith("ticket-")) return interaction.editReply({ content: "Sadece ticket kanallarında." });
@@ -239,7 +223,6 @@ client.on("interactionCreate", async (interaction) => {
       return;
     }
 
-    // /aktif
     if (interaction.commandName === "aktif") {
       if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
         return interaction.reply({ content: "Sadece yöneticiler.", ephemeral: true });
@@ -270,7 +253,6 @@ client.on("interactionCreate", async (interaction) => {
       return interaction.reply({ content: "Aktif mesajı gönderildi!", ephemeral: true });
     }
 
-    // /kapat
     if (interaction.commandName === "kapat") {
       if (!interaction.channel.topic?.startsWith("ticket-")) {
         return interaction.reply({ content: "Bu komut sadece ticket kanallarında kullanılır.", ephemeral: true });
@@ -282,7 +264,6 @@ client.on("interactionCreate", async (interaction) => {
       return;
     }
 
-    // /stats
     if (interaction.commandName === "stats") {
       if (!interaction.member.roles.cache.has(config.staffRole) && !interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
         return interaction.reply({ content: "Yetkin yok.", ephemeral: true });
@@ -309,7 +290,6 @@ client.on("interactionCreate", async (interaction) => {
       return interaction.reply({ embeds: [embed] });
     }
 
-    // /blacklist
     if (interaction.commandName === "blacklist") {
       if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
         return interaction.reply({ content: "Sadece yöneticiler.", ephemeral: true });
@@ -323,7 +303,6 @@ client.on("interactionCreate", async (interaction) => {
       return interaction.reply({ content: `${user} blacklist'e eklendi.`, ephemeral: true });
     }
 
-    // /unblacklist
     if (interaction.commandName === "unblacklist") {
       if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
         return interaction.reply({ content: "Sadece yöneticiler.", ephemeral: true });
@@ -335,9 +314,7 @@ client.on("interactionCreate", async (interaction) => {
     }
   }
 
-  // ==================== BUTONLAR (PANEL) ====================
   if (interaction.isButton()) {
-    // Ticket açma butonları
     if (interaction.customId.startsWith("ticket_")) {
       if (data.blacklist.includes(interaction.user.id)) {
         return interaction.reply({ content: "Blacklist'te olduğun için ticket açamazsın.", ephemeral: true });
@@ -362,7 +339,6 @@ client.on("interactionCreate", async (interaction) => {
       return interaction.showModal(modal);
     }
 
-    // Ticket kapat butonu
     if (interaction.customId === "close_ticket") {
       if (!interaction.member.roles.cache.has(config.staffRole) && !interaction.channel.topic?.includes(interaction.user.id)) {
         return interaction.reply({ content: "Yetkin yok.", ephemeral: true });
@@ -371,12 +347,10 @@ client.on("interactionCreate", async (interaction) => {
       return;
     }
 
-    // Ticket üstlen
     if (interaction.customId === "claim_ticket") {
       if (!interaction.member.roles.cache.has(config.staffRole)) {
         return interaction.reply({ content: "Sadece yetkililer üstlenebilir.", ephemeral: true });
       }
-      // Embed'i güncelle
       const messages = await interaction.channel.messages.fetch({ limit: 10 });
       const ticketMsg = messages.find(m => m.embeds.length && m.embeds[0].title?.includes("Destek Talebi"));
       if (ticketMsg) {
@@ -392,7 +366,6 @@ client.on("interactionCreate", async (interaction) => {
       return interaction.reply({ content: `🙋 ${interaction.user} bu ticket'ı üstlendi.` });
     }
 
-    // Puanlama butonları
     if (interaction.customId.startsWith("rate_")) {
       const rating = parseInt(interaction.customId.replace("rate_", ""));
       data.stats.ratings.push(rating);
@@ -402,7 +375,6 @@ client.on("interactionCreate", async (interaction) => {
     }
   }
 
-  // ==================== MODAL ====================
   if (interaction.isModalSubmit() && interaction.customId.startsWith("ticket_modal:")) {
     await interaction.deferReply({ ephemeral: true });
     const category = interaction.customId.split(":")[1];
@@ -471,7 +443,6 @@ client.on("interactionCreate", async (interaction) => {
   }
 });
 
-// ========== TICKET KAPATMA FONKSİYONU ==========
 async function closeTicket(interaction, channel) {
   await interaction.reply({ content: "Ticket 5 saniye içinde kapatılıyor..." });
 
@@ -487,13 +458,11 @@ async function closeTicket(interaction, channel) {
     });
   }
 
-  // Stats
   data.stats.closed++;
   if (!data.stats.staffStats[interaction.user.id]) data.stats.staffStats[interaction.user.id] = 0;
   data.stats.staffStats[interaction.user.id]++;
   saveData();
 
-  // Puanlama DM
   const ownerId = channel.topic?.split("-")[1];
   if (ownerId) {
     try {
@@ -516,7 +485,6 @@ async function closeTicket(interaction, channel) {
   setTimeout(() => channel.delete().catch(() => {}), 5000);
 }
 
-// ========== HOŞ GELDİN ==========
 client.on("guildMemberAdd", async (member) => {
   try {
     const welcomeEmbed = new EmbedBuilder()
