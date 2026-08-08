@@ -83,12 +83,10 @@ function createSelectMenu() {
 client.once("ready", () => {
   console.log(`✅ ${client.user.tag} aktif!`);
 
-  // Bot durumu
-  client.user.setActivity("dadascxn", {
-    type: 3 // 3 = İzliyor (Watching)
+  client.user.setActivity("dadas ❤️ efecan", {
+    type: 3 // İzliyor
   });
 });
-
 client.on("interactionCreate", async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
 
