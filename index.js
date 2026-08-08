@@ -259,5 +259,24 @@ client.on("ready", async () => {
     console.log("Slash komutlar yüklendi.");
   }
 });
+client.on("guildMemberAdd", async (member) => {
+  try {
+    const welcomeEmbed = new EmbedBuilder()
+      .setColor("#57F287")
+      .setTitle("🎉 Sunucumuza Hoş Geldin!")
+      .setDescription(
+        `Merhaba **${member.user.username}**!\n\n` +
+        `**Dadas DS Pack** sunucusuna katıldığın için teşekkürler.\n` +
+        `Destek almak istersen <#dadas-pack-yardim> kanalındaki menüden ticket açabilirsin.\n\n` +
+        `İyi eğlenceler!`
+      )
+      .setThumbnail(member.user.displayAvatarURL({ dynamic: true }))
+      .setFooter({ text: "Dadas DS Pack Destek Sistemi" })
+      .setTimestamp();
 
+    await member.send({ embeds: [welcomeEmbed] });
+  } catch (error) {
+    console.log(`${member.user.tag} kişisine DM gönderilemedi (muhtemelen DM'leri kapalı).`);
+  }
+});
 client.login(process.env.TOKEN);
