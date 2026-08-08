@@ -82,6 +82,11 @@ function createSelectMenu() {
 
 client.once("ready", () => {
   console.log(`✅ ${client.user.tag} aktif!`);
+
+  // Bot durumu
+  client.user.setActivity("dadascxn", {
+    type: 3 // 3 = İzliyor (Watching)
+  });
 });
 
 client.on("interactionCreate", async (interaction) => {
