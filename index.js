@@ -63,9 +63,15 @@ function createPanelEmbed() {
     .setColor("#2b2d31")
     .setAuthor({ name: "DS SYSTEM", iconURL: client.user.displayAvatarURL() })
     .setDescription(
-      "Ürünlerimiz, hizmetlerimiz ve servislerimiz hakkında bilgi edinmek, destek talep etmek vb. işlemler için aşağıdaki **butonlardan** uygun kategoriyi seçerek destek talebi oluşturabilirsiniz.\n\n" +
-      "**Belirlenen saatler dışında destek talebine bakılmamaktadır.** (10:00 - 00:00)\n" +
-      "Sohbetten **Destek talebine bakar mısınız?** gibi taleplerde bulunmanız süreci hızlandırmaz."
+"Ürünlerimiz, hizmetlerimiz ve servislerimiz hakkında detaylı bilgi almak, destek talebinde bulunmak, satış ve fiyat sorularınızı iletmek veya teknik sorunlarınızı bildirmek için aşağıdaki butonlardan size en uygun kategoriyi seçerek destek talebi oluşturabilirsiniz.\n\n" +
+  "**Önemli Bilgilendirme:**\n" +
+  "• Destek taleplerine sadece belirlenen saatler arasında bakılmaktadır. **(10:00 - 00:00)**\n" +
+  "• Bu saatler dışında açılan talepler, mesai saatleri başladığında sırayla incelenecektir.\n" +
+  "• Sohbet kanallarında *“Destek talebine bakar mısınız?”*, *“Yetkili var mı?”* gibi mesajlar atmanız süreci hızlandırmaz, aksine yavaşlatır.\n" +
+  "• Lütfen sorununuzu mümkün olduğunca detaylı ve açık bir şekilde yazın. Bu sayede size daha hızlı ve doğru yardım edebiliriz.\n" +
+  "• Aynı anda birden fazla ticket açmanız engellenmiştir. Mevcut talebiniz sonuçlanmadan yeni talep oluşturamazsınız.\n\n" +
+  "Anlayışınız için teşekkür eder, iyi günler dileriz."
+)
     )
     .setImage(config.gifUrl)
     .setFooter({ text: "Saygılarımızla DS DiscordBot #YENİ" })
