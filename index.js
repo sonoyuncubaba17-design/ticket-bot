@@ -35,17 +35,14 @@ const config = {
 function createPanelEmbed() {
   return new EmbedBuilder()
     .setColor("#2b2d31")
-    .setAuthor({ name: "Dadas Fy Pack | Destek", iconURL: client.user.displayAvatarURL() })
+    .setAuthor({ name: "Dadas DS Pack | Destek Hattı", iconURL: client.user.displayAvatarURL() })
     .setDescription(
       "Ürünlerimiz, hizmetlerimiz ve servislerimiz hakkında bilgi edinmek, destek talep etmek vb. işlemler için aşağıdaki menüden seçtiğiniz uygun kategori ile destek talebi oluşturabilirsiniz.\n\n" +
       "**Belirlenen saatler dışında destek talebine bakılmamaktadır.**\n" +
-      "Sohbetten **Destek talebine bakar mısınız?** gibi taleplerde bulunmanız süreci hızlandırmaz.\n\n" +
-      "📅 **Çalışma Saatleri:**\n" +
-      "• Hafta içi: 08:00 - 22:00\n" +
-      "• Hafta Sonu: 08:00 - 22:00"
+      "Sohbetten **Destek talebine bakar mısınız?** gibi taleplerde bulunmanız süreci hızlandırmaz.\n\n" 
     )
     .setImage(config.gifUrl)
-    .setFooter({ text: "Saygılarımızla Dadas Fy Pack #YENİ " })
+    .setFooter({ text: "Saygılarımızla Dadas DS Pack #YENİ " })
     .setTimestamp();
 }
 
@@ -158,7 +155,7 @@ client.on("interactionCreate", async (interaction) => {
     .setTitle(`🎫 ${category.toUpperCase()} Destek Talebi`)
     .setDescription(`Merhaba ${user},\n\nDestek talebin oluşturuldu. Yetkililer en kısa sürede seninle ilgilenecek.\n\nLütfen sorununuzu detaylı bir şekilde anlat.`)
     .addFields({ name: "Kategori", value: category, inline: true })
-    .setFooter({ text: "Dadas Fy Pack Destek Sistemi" })
+    .setFooter({ text: "Dadas Ds Pack Destek Sistemi" })
     .setTimestamp();
 
   const buttons = new ActionRowBuilder().addComponents(
