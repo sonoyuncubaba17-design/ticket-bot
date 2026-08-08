@@ -266,12 +266,12 @@ client.on("guildMemberAdd", async (member) => {
       .setTitle("🎉 Sunucumuza Hoş Geldin!")
       .setDescription(
         `Merhaba **${member.user.username}**!\n\n` +
-        `**Dadas DS Pack** sunucusuna katıldığın için teşekkürler.\n` +
-        `Destek almak istersen <#dadas-pack-yardim> kanalındaki menüden ticket açabilirsin.\n\n` +
+        `**❆ - DS DiscordBots** sunucusuna katıldığın için teşekkürler.\n` +
+        `Destek almak istersen <#ds-yardim> kanalındaki menüden ticket açabilirsin.\n\n` +
         `İyi eğlenceler!`
       )
       .setThumbnail(member.user.displayAvatarURL({ dynamic: true }))
-      .setFooter({ text: "Dadas DS Pack Destek Sistemi" })
+      .setFooter({ text: "❆ - DS DiscordBots" })
       .setTimestamp();
 
     await member.send({ embeds: [welcomeEmbed] });
