@@ -62,8 +62,8 @@ function createPanelEmbed() {
   return new EmbedBuilder()
     .setColor("#2b2d31")
     .setAuthor({ name: "DS SYSTEM", iconURL: client.user.displayAvatarURL() })
-    .setDescription(
-"Ürünlerimiz, hizmetlerimiz ve servislerimiz hakkında detaylı bilgi almak, destek talebinde bulunmak, satış ve fiyat sorularınızı iletmek veya teknik sorunlarınızı bildirmek için aşağıdaki butonlardan size en uygun kategoriyi seçerek destek talebi oluşturabilirsiniz.\n\n" +
+  .setDescription(
+  "Ürünlerimiz, hizmetlerimiz ve servislerimiz hakkında detaylı bilgi almak, destek talebinde bulunmak, satış ve fiyat sorularınızı iletmek veya teknik sorunlarınızı bildirmek için aşağıdaki butonlardan size en uygun kategoriyi seçerek destek talebi oluşturabilirsiniz.\n\n" +
   "**Önemli Bilgilendirme:**\n" +
   "• Destek taleplerine sadece belirlenen saatler arasında bakılmaktadır. **(10:00 - 00:00)**\n" +
   "• Bu saatler dışında açılan talepler, mesai saatleri başladığında sırayla incelenecektir.\n" +
