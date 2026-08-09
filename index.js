@@ -179,7 +179,6 @@ client.on("guildMemberAdd", async (member) => {
 client.on("interactionCreate", async (interaction) => {
   if (interaction.isChatInputCommand()) {
 
-    // PANEL
     if (interaction.commandName === "panel") {
       if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
         return interaction.reply({ content: "Yetkin yok.", ephemeral: true });
@@ -188,7 +187,6 @@ client.on("interactionCreate", async (interaction) => {
       return interaction.reply({ content: "Panel gönderildi!", ephemeral: true });
     }
 
-    // AKTİF (kutular diğerleriyle aynı stilde)
     if (interaction.commandName === "aktif") {
       if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
         return interaction.reply({ content: "Sadece yöneticiler kullanabilir.", ephemeral: true });
@@ -219,7 +217,6 @@ client.on("interactionCreate", async (interaction) => {
       return interaction.reply({ content: "Aktif mesajı gönderildi!", ephemeral: true });
     }
 
-    // MESAJ
     if (interaction.commandName === "mesaj") {
       await interaction.deferReply({ ephemeral: true });
       if (!interaction.channel.topic?.startsWith("ticket-")) return interaction.editReply({ content: "Sadece ticket kanalında." });
@@ -250,7 +247,6 @@ client.on("interactionCreate", async (interaction) => {
       return;
     }
 
-    // EKLE
     if (interaction.commandName === "ekle") {
       await interaction.deferReply({ ephemeral: true });
       if (!interaction.channel.topic?.startsWith("ticket-")) return interaction.editReply({ content: "Sadece ticket kanalında." });
@@ -269,7 +265,6 @@ client.on("interactionCreate", async (interaction) => {
       return;
     }
 
-    // KAPAT
     if (interaction.commandName === "kapat") {
       if (!interaction.channel.topic?.startsWith("ticket-")) {
         return interaction.reply({ content: "Sadece ticket kanalında.", ephemeral: true });
@@ -446,21 +441,27 @@ client.on("interactionCreate", async (interaction) => {
 
       await channel.send({ content: `${user} | <@&${config.staffRole}>`, embeds: [ticketEmbed], components: [buttons] });
 
+      // ========== DETAYLI TİCKET LOGU ==========
       const logCh = interaction.guild.channels.cache.get(config.ticketLog);
       if (logCh) {
-        logCh.send({
-          embeds: [
-            new EmbedBuilder()
-              .setColor("#5865F2")
-              .setTitle("📥 Yeni Ticket Açıldı")
-              .addFields(
-                { name: "Kullanıcı", value: `${user.tag}`, inline: true },
-                { name: "Kategori", value: kat[category], inline: true },
-                { name: "Kanal", value: `${channel}`, inline: true }
-              )
-              .setTimestamp()
-          ]
-        });
+        const logEmbed = new EmbedBuilder()
+          .setColor("#5865F2")
+          .setAuthor({ name: "DS SYSTEM", iconURL: client.user.displayAvatarURL({ dynamic: true }) })
+          .setTitle("📥 Yeni Ticket Açıldı")
+          .addFields(
+            { name: "Kullanıcı", value: `${user} (\`${user.tag}\`)`, inline: true },
+            { name: "Kullanıcı ID", value: `\`${user.id}\``, inline: true },
+            { name: "Kategori", value: `\`${kat[category]}\``, inline: true },
+            { name: "Ticket No", value: `\`#${ticketNo}\``, inline: true },
+            { name: "Kanal", value: `${channel}`, inline: true },
+            { name: "Açılış Zamanı", value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: true },
+            { name: "Sorun Açıklaması", value: `\`\`\`${problem.substring(0, 900)}\`\`\`` }
+          )
+          .setThumbnail(user.displayAvatarURL({ dynamic: true }))
+          .setFooter({ text: `Kanal ID: ${channel.id}` })
+          .setTimestamp();
+
+        logCh.send({ embeds: [logEmbed] });
       }
 
       return interaction.editReply({ content: `Ticket oluşturuldu → ${channel}` });
