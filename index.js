@@ -89,7 +89,8 @@ function createPanelButtons() {
     new ButtonBuilder().setCustomId("ticket_genel").setLabel("Genel Destek").setStyle(ButtonStyle.Primary).setEmoji("🎫"),
     new ButtonBuilder().setCustomId("ticket_satis").setLabel("Satış / Fiyat").setStyle(ButtonStyle.Success).setEmoji("💰"),
     new ButtonBuilder().setCustomId("ticket_teknik").setLabel("Teknik Destek").setStyle(ButtonStyle.Secondary).setEmoji("🛠️"),
-    new ButtonBuilder().setCustomId("ticket_sikayet").setLabel("Şikayet / Öneri").setStyle(ButtonStyle.Danger).setEmoji("📢")
+    new ButtonBuilder().setCustomId("ticket_sikayet").setLabel("Şikayet / Öneri").setStyle(ButtonStyle.Danger).setEmoji("📢"),
+    new ButtonBuilder().setCustomId("ticket_diger").setLabel("Diğer").setStyle(ButtonStyle.Secondary).setEmoji("📁")
   );
 }
 
@@ -414,7 +415,13 @@ client.on("interactionCreate", async (interaction) => {
       data.stats.opened++;
       saveData();
 
-      const kat = { genel: "Genel Destek", satis: "Satış / Fiyat", teknik: "Teknik Destek", sikayet: "Şikayet / Öneri" };
+      const kat = { 
+        genel: "Genel Destek", 
+        satis: "Satış / Fiyat", 
+        teknik: "Teknik Destek", 
+        sikayet: "Şikayet / Öneri",
+        diger: "Diğer"
+      };
 
       const ticketEmbed = new EmbedBuilder()
         .setColor("#5865F2")
@@ -441,7 +448,7 @@ client.on("interactionCreate", async (interaction) => {
 
       await channel.send({ content: `${user} | <@&${config.staffRole}>`, embeds: [ticketEmbed], components: [buttons] });
 
-      // ========== DETAYLI TİCKET LOGU ==========
+      // Detaylı Log
       const logCh = interaction.guild.channels.cache.get(config.ticketLog);
       if (logCh) {
         const logEmbed = new EmbedBuilder()
