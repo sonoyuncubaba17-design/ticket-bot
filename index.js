@@ -178,6 +178,8 @@ client.on("guildMemberAdd", async (member) => {
 
 client.on("interactionCreate", async (interaction) => {
   if (interaction.isChatInputCommand()) {
+
+    // PANEL
     if (interaction.commandName === "panel") {
       if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
         return interaction.reply({ content: "Yetkin yok.", ephemeral: true });
@@ -186,7 +188,7 @@ client.on("interactionCreate", async (interaction) => {
       return interaction.reply({ content: "Panel gönderildi!", ephemeral: true });
     }
 
-    // ========== AKTİF KOMUTU (GERİ EKLENDİ) ==========
+    // AKTİF (kutular diğerleriyle aynı stilde)
     if (interaction.commandName === "aktif") {
       if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
         return interaction.reply({ content: "Sadece yöneticiler kullanabilir.", ephemeral: true });
@@ -202,14 +204,14 @@ client.on("interactionCreate", async (interaction) => {
         .setTitle("🟢 DS SYSTEM Aktif!")
         .setDescription("Sistem sorunsuz şekilde çalışıyor.\nTüm destek kanalları hazır ve aktif.")
         .addFields(
-          { name: "👥 Aktif Yetkili", value: `\`\`\`${aktifYetkili}\`\`\``, inline: true },
-          { name: "🎫 Açık Ticket", value: `\`\`\`${acikTicket}\`\`\``, inline: true },
-          { name: "👤 Toplam Üye", value: `\`\`\`${interaction.guild.memberCount}\`\`\``, inline: true },
-          { name: "🤖 Bot Durumu", value: "```🟢 Çevrimiçi```", inline: true },
-          { name: "⏰ Çalışma Süresi", value: `<t:${Math.floor(client.readyTimestamp / 1000)}:R>`, inline: true }
+          { name: "Aktif Yetkili", value: `\`\`\`${aktifYetkili}\`\`\``, inline: true },
+          { name: "Açık Ticket", value: `\`\`\`${acikTicket}\`\`\``, inline: true },
+          { name: "Toplam Üye", value: `\`\`\`${interaction.guild.memberCount}\`\`\``, inline: true },
+          { name: "Bot Durumu", value: "```🟢 Çevrimiçi```", inline: true },
+          { name: "Çalışma Süresi", value: `<t:${Math.floor(client.readyTimestamp / 1000)}:R>`, inline: true }
         )
         .setImage(config.gifUrl)
-        .setThumbnail(config.gifUrl)
+        .setThumbnail(client.user.displayAvatarURL({ dynamic: true }))
         .setFooter({ text: "DS SYSTEM • Discord Bot" })
         .setTimestamp();
 
@@ -217,6 +219,7 @@ client.on("interactionCreate", async (interaction) => {
       return interaction.reply({ content: "Aktif mesajı gönderildi!", ephemeral: true });
     }
 
+    // MESAJ
     if (interaction.commandName === "mesaj") {
       await interaction.deferReply({ ephemeral: true });
       if (!interaction.channel.topic?.startsWith("ticket-")) return interaction.editReply({ content: "Sadece ticket kanalında." });
@@ -247,6 +250,7 @@ client.on("interactionCreate", async (interaction) => {
       return;
     }
 
+    // EKLE
     if (interaction.commandName === "ekle") {
       await interaction.deferReply({ ephemeral: true });
       if (!interaction.channel.topic?.startsWith("ticket-")) return interaction.editReply({ content: "Sadece ticket kanalında." });
@@ -265,6 +269,7 @@ client.on("interactionCreate", async (interaction) => {
       return;
     }
 
+    // KAPAT
     if (interaction.commandName === "kapat") {
       if (!interaction.channel.topic?.startsWith("ticket-")) {
         return interaction.reply({ content: "Sadece ticket kanalında.", ephemeral: true });
@@ -274,6 +279,7 @@ client.on("interactionCreate", async (interaction) => {
     }
   }
 
+  // ========== BUTONLAR ==========
   if (interaction.isButton()) {
     if (interaction.customId.startsWith("ticket_")) {
       if (data.blacklist.includes(interaction.user.id)) {
@@ -335,6 +341,7 @@ client.on("interactionCreate", async (interaction) => {
       return interaction.showModal(modal);
     }
 
+    // PUANLAMA
     if (interaction.customId.startsWith("rate_")) {
       const rating = parseInt(interaction.customId.replace("rate_", ""));
       data.stats.ratings.push(rating);
@@ -374,6 +381,7 @@ client.on("interactionCreate", async (interaction) => {
     }
   }
 
+  // ========== MODAL ==========
   if (interaction.isModalSubmit()) {
     if (interaction.customId.startsWith("ticket_modal:")) {
       await interaction.deferReply({ ephemeral: true });
@@ -518,6 +526,7 @@ client.on("interactionCreate", async (interaction) => {
   }
 });
 
+// ========== TICKET KAPATMA ==========
 async function closeTicket(interaction, channel) {
   await interaction.reply({ content: "Ticket kapatılıyor..." });
 
