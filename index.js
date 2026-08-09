@@ -35,6 +35,7 @@ const config = {
   ticketLog: process.env.TICKET_LOG,
   transcriptLog: process.env.TRANSCRIPT_LOG,
   categoryId: process.env.CATEGORY_ID,
+  ratingLog: "1535549655621042197",
   gifUrl: "https://cdn.discordapp.com/attachments/1535547742397399121/1535659790846402621/DS_hizli_kar.gif?ex=6a789221&is=6a7740a1&hm=24b5cc21dde58dc6418e0d86fc4494f4dc2476e711b5d3acc60929d2fe56397a&",
   voiceChannelId: "1535776380631916555"
 };
@@ -138,12 +139,12 @@ client.once("ready", async () => {
       { name: "mesaj", description: "Ticket sahibine mesaj gönderir", options: [{ name: "mesaj", description: "Mesaj", type: 3, required: true }] },
       { name: "ekle", description: "Ticket'a üye ekler", options: [{ name: "kisi", description: "Kişi", type: 6, required: true }] },
       { name: "kapat", description: "Ticket'ı kapatır" },
-      { name: "stats", description: "İstatistikleri gösterir" }
+      { name: "aktif", description: "Sunucu aktif mesajını gönderir" }
     ]);
   }
 });
 
-// ========== HOŞ GELDİN (DS SYSTEM) ==========
+// ========== HOŞ GELDİN ==========
 client.on("guildMemberAdd", async (member) => {
   try {
     const created = Math.floor(member.user.createdTimestamp / 1000);
@@ -176,7 +177,6 @@ client.on("guildMemberAdd", async (member) => {
 });
 
 client.on("interactionCreate", async (interaction) => {
-  // ========== SLASH KOMUTLAR ==========
   if (interaction.isChatInputCommand()) {
     if (interaction.commandName === "panel") {
       if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
@@ -184,6 +184,37 @@ client.on("interactionCreate", async (interaction) => {
       }
       await interaction.channel.send({ embeds: [createPanelEmbed()], components: [createPanelButtons()] });
       return interaction.reply({ content: "Panel gönderildi!", ephemeral: true });
+    }
+
+    // ========== AKTİF KOMUTU (GERİ EKLENDİ) ==========
+    if (interaction.commandName === "aktif") {
+      if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
+        return interaction.reply({ content: "Sadece yöneticiler kullanabilir.", ephemeral: true });
+      }
+
+      const staffRole = interaction.guild.roles.cache.get(config.staffRole);
+      const aktifYetkili = staffRole ? staffRole.members.filter(m => ["online", "idle", "dnd"].includes(m.presence?.status)).size : 0;
+      const acikTicket = interaction.guild.channels.cache.filter(c => c.parentId === config.categoryId && c.topic?.startsWith("ticket-")).size;
+
+      const embed = new EmbedBuilder()
+        .setColor("#00FF9D")
+        .setAuthor({ name: "DS SYSTEM", iconURL: client.user.displayAvatarURL({ dynamic: true }) })
+        .setTitle("🟢 DS SYSTEM Aktif!")
+        .setDescription("Sistem sorunsuz şekilde çalışıyor.\nTüm destek kanalları hazır ve aktif.")
+        .addFields(
+          { name: "👥 Aktif Yetkili", value: `\`\`\`${aktifYetkili}\`\`\``, inline: true },
+          { name: "🎫 Açık Ticket", value: `\`\`\`${acikTicket}\`\`\``, inline: true },
+          { name: "👤 Toplam Üye", value: `\`\`\`${interaction.guild.memberCount}\`\`\``, inline: true },
+          { name: "🤖 Bot Durumu", value: "```🟢 Çevrimiçi```", inline: true },
+          { name: "⏰ Çalışma Süresi", value: `<t:${Math.floor(client.readyTimestamp / 1000)}:R>`, inline: true }
+        )
+        .setImage(config.gifUrl)
+        .setThumbnail(config.gifUrl)
+        .setFooter({ text: "DS SYSTEM • Discord Bot" })
+        .setTimestamp();
+
+      await interaction.channel.send({ embeds: [embed] });
+      return interaction.reply({ content: "Aktif mesajı gönderildi!", ephemeral: true });
     }
 
     if (interaction.commandName === "mesaj") {
@@ -201,10 +232,11 @@ client.on("interactionCreate", async (interaction) => {
           .setAuthor({ name: "DS SYSTEM", iconURL: client.user.displayAvatarURL({ dynamic: true }) })
           .setTitle("Destek Ekibinden Mesaj")
           .addFields(
-            { name: "Gönderen Yetkili", value: `${interaction.user}`, inline: false },
-            { name: "Mesaj", value: mesaj, inline: false }
+            { name: "Gönderen Yetkili", value: `\`\`\`${interaction.user.username}\`\`\``, inline: false },
+            { name: "Mesaj", value: `\`\`\`${mesaj}\`\`\``, inline: false }
           )
-          .setFooter({ text: interaction.guild.name })
+          .setImage(config.gifUrl)
+          .setFooter({ text: `${interaction.guild.name} • DS SYSTEM` })
           .setTimestamp();
 
         await owner.send({ embeds: [dmEmbed] });
@@ -242,7 +274,6 @@ client.on("interactionCreate", async (interaction) => {
     }
   }
 
-  // ========== BUTONLAR ==========
   if (interaction.isButton()) {
     if (interaction.customId.startsWith("ticket_")) {
       if (data.blacklist.includes(interaction.user.id)) {
@@ -304,13 +335,11 @@ client.on("interactionCreate", async (interaction) => {
       return interaction.showModal(modal);
     }
 
-    // ========== PUANLAMA ==========
     if (interaction.customId.startsWith("rate_")) {
       const rating = parseInt(interaction.customId.replace("rate_", ""));
       data.stats.ratings.push(rating);
       saveData();
 
-      // Kullanıcıya teşekkür
       await interaction.update({
         embeds: [
           new EmbedBuilder()
@@ -324,28 +353,27 @@ client.on("interactionCreate", async (interaction) => {
         components: []
       });
 
-      // Log kanalına puan düşsün
-      const logChannel = interaction.client.channels.cache.get(config.transcriptLog);
-      if (logChannel) {
+      const ratingChannel = interaction.client.channels.cache.get(config.ratingLog);
+      if (ratingChannel) {
         const rateLog = new EmbedBuilder()
           .setColor("#FEE75C")
-          .setTitle("⭐ Yeni Destek Puanı Alındı")
+          .setAuthor({ name: "DS SYSTEM", iconURL: client.user.displayAvatarURL({ dynamic: true }) })
+          .setTitle("⭐ Yeni Destek Puanı")
           .addFields(
             { name: "Kullanıcı", value: `${interaction.user} (\`${interaction.user.tag}\`)`, inline: true },
-            { name: "Verdiği Puan", value: `**${rating} / 5** ⭐`, inline: true },
+            { name: "Verdiği Puan", value: `**${rating} / 5**`, inline: true },
             { name: "Tarih", value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: true }
           )
           .setThumbnail(interaction.user.displayAvatarURL({ dynamic: true }))
-          .setFooter({ text: `Kullanıcı ID: ${interaction.user.id}` })
+          .setFooter({ text: `ID: ${interaction.user.id}` })
           .setTimestamp();
 
-        logChannel.send({ embeds: [rateLog] }).catch(() => {});
+        ratingChannel.send({ embeds: [rateLog] }).catch(() => {});
       }
       return;
     }
   }
 
-  // ========== MODAL ==========
   if (interaction.isModalSubmit()) {
     if (interaction.customId.startsWith("ticket_modal:")) {
       await interaction.deferReply({ ephemeral: true });
@@ -442,10 +470,11 @@ client.on("interactionCreate", async (interaction) => {
           .setAuthor({ name: "DS SYSTEM", iconURL: client.user.displayAvatarURL({ dynamic: true }) })
           .setTitle("Destek Ekibinden Mesaj")
           .addFields(
-            { name: "Gönderen Yetkili", value: `${interaction.user}` },
-            { name: "Mesaj", value: message }
+            { name: "Gönderen Yetkili", value: `\`\`\`${interaction.user.username}\`\`\`` },
+            { name: "Mesaj", value: `\`\`\`${message}\`\`\`` }
           )
-          .setFooter({ text: interaction.guild.name })
+          .setImage(config.gifUrl)
+          .setFooter({ text: `${interaction.guild.name} • DS SYSTEM` })
           .setTimestamp();
 
         await owner.send({ embeds: [dmEmbed] });
@@ -489,7 +518,6 @@ client.on("interactionCreate", async (interaction) => {
   }
 });
 
-// ========== TICKET KAPATMA ==========
 async function closeTicket(interaction, channel) {
   await interaction.reply({ content: "Ticket kapatılıyor..." });
 
@@ -499,7 +527,6 @@ async function closeTicket(interaction, channel) {
 
   const ownerId = channel.topic?.split("-")[1];
 
-  // Detaylı kapanış logu
   const logChannel = interaction.guild.channels.cache.get(config.transcriptLog);
   if (logChannel) {
     const closeEmbed = new EmbedBuilder()
@@ -513,13 +540,11 @@ async function closeTicket(interaction, channel) {
         { name: "Toplam Mesaj", value: `${messages.size}`, inline: true },
         { name: "Kanal ID", value: `\`${channel.id}\``, inline: true }
       )
-      .setFooter({ text: `Topic: ${channel.topic || "Yok"}` })
       .setTimestamp();
 
     await logChannel.send({ embeds: [closeEmbed], files: [attachment] });
   }
 
-  // Temiz modern puanlama mesajı
   if (ownerId) {
     try {
       const owner = await client.users.fetch(ownerId);
@@ -530,9 +555,10 @@ async function closeTicket(interaction, channel) {
         .setDescription("Destek hizmetimizi puanlar mısın?")
         .addFields(
           { name: "Puan Ölçeği", value: "```1 = Çok Kötü\n5 = Çok İyi```" },
-          { name: "Not", value: "Görüşünüz bizim için çok değerli." }
+          { name: "Not", value: "Görüşünüz bizim için çok önemli!" }
         )
-        .setFooter({ text: interaction.guild.name })
+        .setImage(config.gifUrl)
+        .setFooter({ text: "DS SYSTEM • Destek Puanlaması" })
         .setTimestamp();
 
       const rateButtons = new ActionRowBuilder().addComponents(
