@@ -43,7 +43,8 @@ const dataPath = path.join(__dirname, 'data.json');
 let data = {
   blacklist: [],
   stats: { opened: 0, closed: 0, ratings: [], staffStats: {} },
-  history: []
+  history: [],
+  ticketCounter: 1000
 };
 
 function loadData() {
@@ -51,6 +52,7 @@ function loadData() {
     if (fs.existsSync(dataPath)) {
       data = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
       if (!data.history) data.history = [];
+      if (!data.ticketCounter) data.ticketCounter = 1000;
     }
   } catch (e) {
     console.log('data.json okunamadı, yeni oluşturuluyor.');
@@ -472,7 +474,9 @@ client.on("interactionCreate", async (interaction) => {
     }
   }
 
+  // ========== BUTONLAR ==========
   if (interaction.isButton()) {
+    // Ticket açma butonları
     if (interaction.customId.startsWith("ticket_")) {
       if (data.blacklist.includes(interaction.user.id)) {
         return interaction.reply({ content: "Blacklist'te olduğun için ticket açamazsın.", ephemeral: true });
@@ -493,6 +497,7 @@ client.on("interactionCreate", async (interaction) => {
       return interaction.showModal(modal);
     }
 
+    // Ticket kapat
     if (interaction.customId === "close_ticket") {
       if (!interaction.member.roles.cache.has(config.staffRole) && !interaction.channel.topic?.includes(interaction.user.id)) {
         return interaction.reply({ content: "Yetkin yok.", ephemeral: true });
@@ -501,25 +506,85 @@ client.on("interactionCreate", async (interaction) => {
       return;
     }
 
+    // Üstlen
     if (interaction.customId === "claim_ticket") {
       if (!interaction.member.roles.cache.has(config.staffRole)) {
         return interaction.reply({ content: "Sadece yetkililer üstlenebilir.", ephemeral: true });
       }
       const messages = await interaction.channel.messages.fetch({ limit: 10 });
-      const ticketMsg = messages.find(m => m.embeds.length && m.embeds[0].title?.includes("Destek Talebi"));
+      const ticketMsg = messages.find(m => m.embeds.length && m.embeds[0].title?.includes("Ticket Oluşturuldu"));
       if (ticketMsg) {
         const oldEmbed = ticketMsg.embeds[0];
         const newEmbed = EmbedBuilder.from(oldEmbed)
           .addFields({ name: "🙋 Üstlenen Yetkili", value: `${interaction.user}`, inline: false });
         const buttons = new ActionRowBuilder().addComponents(
-          new ButtonBuilder().setCustomId("close_ticket").setLabel("Ticket'ı Kapat").setStyle(ButtonStyle.Danger).setEmoji("🔒"),
-          new ButtonBuilder().setCustomId("claim_ticket").setLabel("Üstlenildi").setStyle(ButtonStyle.Secondary).setEmoji("✅").setDisabled(true)
+          new ButtonBuilder().setCustomId("claim_ticket").setLabel("Üstlenildi").setStyle(ButtonStyle.Secondary).setEmoji("✅").setDisabled(true),
+          new ButtonBuilder().setCustomId("close_ticket").setLabel("Kapat").setStyle(ButtonStyle.Danger).setEmoji("🔒"),
+          new ButtonBuilder().setCustomId("add_user").setLabel("Kullanıcı Ekle").setStyle(ButtonStyle.Primary).setEmoji("➕"),
+          new ButtonBuilder().setCustomId("remove_user").setLabel("Kullanıcı Çıkar").setStyle(ButtonStyle.Secondary).setEmoji("➖"),
+          new ButtonBuilder().setCustomId("rename_channel").setLabel("Kanal Adı").setStyle(ButtonStyle.Secondary).setEmoji("✏️")
         );
         await ticketMsg.edit({ embeds: [newEmbed], components: [buttons] });
       }
       return interaction.reply({ content: `🙋 ${interaction.user} bu ticket'ı üstlendi.` });
     }
 
+    // Kullanıcı Ekle
+    if (interaction.customId === "add_user") {
+      if (!interaction.member.roles.cache.has(config.staffRole)) {
+        return interaction.reply({ content: "Sadece yetkililer kullanabilir.", ephemeral: true });
+      }
+      const modal = new ModalBuilder()
+        .setCustomId("modal_add_user")
+        .setTitle("Kullanıcı Ekle");
+      const input = new TextInputBuilder()
+        .setCustomId("user_id")
+        .setLabel("Kullanıcı ID veya @mention")
+        .setStyle(TextInputStyle.Short)
+        .setPlaceholder("Örn: 123456789012345678")
+        .setRequired(true);
+      modal.addComponents(new ActionRowBuilder().addComponents(input));
+      return interaction.showModal(modal);
+    }
+
+    // Kullanıcı Çıkar
+    if (interaction.customId === "remove_user") {
+      if (!interaction.member.roles.cache.has(config.staffRole)) {
+        return interaction.reply({ content: "Sadece yetkililer kullanabilir.", ephemeral: true });
+      }
+      const modal = new ModalBuilder()
+        .setCustomId("modal_remove_user")
+        .setTitle("Kullanıcı Çıkar");
+      const input = new TextInputBuilder()
+        .setCustomId("user_id")
+        .setLabel("Kullanıcı ID veya @mention")
+        .setStyle(TextInputStyle.Short)
+        .setPlaceholder("Örn: 123456789012345678")
+        .setRequired(true);
+      modal.addComponents(new ActionRowBuilder().addComponents(input));
+      return interaction.showModal(modal);
+    }
+
+    // Kanal Adı Değiştir
+    if (interaction.customId === "rename_channel") {
+      if (!interaction.member.roles.cache.has(config.staffRole)) {
+        return interaction.reply({ content: "Sadece yetkililer kullanabilir.", ephemeral: true });
+      }
+      const modal = new ModalBuilder()
+        .setCustomId("modal_rename_channel")
+        .setTitle("Kanal Adını Değiştir");
+      const input = new TextInputBuilder()
+        .setCustomId("new_name")
+        .setLabel("Yeni kanal adı")
+        .setStyle(TextInputStyle.Short)
+        .setPlaceholder("Örn: satis-ahmet")
+        .setRequired(true)
+        .setMaxLength(50);
+      modal.addComponents(new ActionRowBuilder().addComponents(input));
+      return interaction.showModal(modal);
+    }
+
+    // Puanlama
     if (interaction.customId.startsWith("rate_")) {
       const rating = parseInt(interaction.customId.replace("rate_", ""));
       data.stats.ratings.push(rating);
@@ -540,76 +605,183 @@ client.on("interactionCreate", async (interaction) => {
     }
   }
 
-  if (interaction.isModalSubmit() && interaction.customId.startsWith("ticket_modal:")) {
-    await interaction.deferReply({ ephemeral: true });
-    const category = interaction.customId.split(":")[1];
-    const problem = interaction.fields.getTextInputValue("problem");
-    const user = interaction.user;
+  // ========== MODAL SUBMIT ==========
+  if (interaction.isModalSubmit()) {
+    // Ticket oluşturma
+    if (interaction.customId.startsWith("ticket_modal:")) {
+      await interaction.deferReply({ ephemeral: true });
+      const category = interaction.customId.split(":")[1];
+      const problem = interaction.fields.getTextInputValue("problem");
+      const user = interaction.user;
 
-    if (data.blacklist.includes(user.id)) {
-      return interaction.editReply({ content: "Blacklist'te olduğun için ticket açamazsın." });
-    }
+      if (data.blacklist.includes(user.id)) {
+        return interaction.editReply({ content: "Blacklist'te olduğun için ticket açamazsın." });
+      }
 
-    const existing = interaction.guild.channels.cache.find(c => c.topic === `ticket-${user.id}` && c.parentId === config.categoryId);
-    if (existing) {
-      return interaction.editReply({ content: `Zaten açık ticket'ın var: ${existing}` });
-    }
+      const existing = interaction.guild.channels.cache.find(c => c.topic === `ticket-${user.id}` && c.parentId === config.categoryId);
+      if (existing) {
+        return interaction.editReply({ content: `Zaten açık ticket'ın var: ${existing}` });
+      }
 
-    const channel = await interaction.guild.channels.create({
-      name: `ticket-${user.username}`,
-      type: ChannelType.GuildText,
-      parent: config.categoryId,
-      topic: `ticket-${user.id}`,
-      permissionOverwrites: [
-        { id: interaction.guild.id, deny: [PermissionFlagsBits.ViewChannel] },
-        { id: user.id, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.AttachFiles, PermissionFlagsBits.ReadMessageHistory] },
-        { id: config.staffRole, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.ManageMessages, PermissionFlagsBits.AttachFiles] }
-      ]
-    });
+      // Ticket numarası
+      data.ticketCounter++;
+      const ticketNo = data.ticketCounter;
+      saveData();
 
-    data.stats.opened++;
-    saveData();
+      const channel = await interaction.guild.channels.create({
+        name: `ticket-${user.username.toLowerCase().replace(/[^a-z0-9]/gi, "")}`,
+        type: ChannelType.GuildText,
+        parent: config.categoryId,
+        topic: `ticket-${user.id}`,
+        permissionOverwrites: [
+          { id: interaction.guild.id, deny: [PermissionFlagsBits.ViewChannel] },
+          { id: user.id, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.AttachFiles, PermissionFlagsBits.ReadMessageHistory] },
+          { id: config.staffRole, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.ManageMessages, PermissionFlagsBits.AttachFiles] }
+        ]
+      });
 
-    const aktifYetkililer = getAktifYetkililer(interaction.guild);
+      data.stats.opened++;
+      saveData();
 
-    const ticketEmbed = new EmbedBuilder()
-      .setColor("#57F287")
-      .setAuthor({ name: "DS SYSTEM • Yeni Destek Talebi", iconURL: client.user.displayAvatarURL() })
-      .setTitle(`🎫 ${category.toUpperCase()} Destek Talebi`)
-      .setDescription(`Merhaba ${user},\n\nDestek talebin başarıyla oluşturuldu.\nYetkililer en kısa sürede seninle ilgilenecek.`)
-      .addFields(
-        { name: "📂 Kategori", value: `\`${category.toUpperCase()}\``, inline: true },
-        { name: "👤 Kullanıcı", value: `${user}`, inline: true },
-        { name: "📝 Sorun Açıklaması", value: problem },
-        { name: "👥 Aktif Yetkililer", value: aktifYetkililer }
-      )
-      .setImage(config.gifUrl)
-      .setFooter({ text: "DS SYSTEM • Ticket Sistemi" })
-      .setTimestamp();
+      const kategoriIsimleri = {
+        genel: "Genel Destek",
+        satis: "Satış / Fiyat",
+        teknik: "Teknik Destek",
+        sikayet: "Şikayet / Öneri"
+      };
 
-    const buttons = new ActionRowBuilder().addComponents(
-      new ButtonBuilder().setCustomId("close_ticket").setLabel("Ticket'ı Kapat").setStyle(ButtonStyle.Danger).setEmoji("🔒"),
-      new ButtonBuilder().setCustomId("claim_ticket").setLabel("Üstlen").setStyle(ButtonStyle.Primary).setEmoji("🙋")
-    );
-
-    await channel.send({ content: `${user} | <@&${config.staffRole}>`, embeds: [ticketEmbed], components: [buttons] });
-
-    const logChannel = interaction.guild.channels.cache.get(config.ticketLog);
-    if (logChannel) {
-      const logEmbed = new EmbedBuilder()
+      const ticketEmbed = new EmbedBuilder()
         .setColor("#5865F2")
-        .setTitle("📥 Yeni Ticket Açıldı")
-        .addFields(
-          { name: "Kullanıcı", value: `${user.tag} (${user.id})`, inline: true },
-          { name: "Kategori", value: category, inline: true },
-          { name: "Kanal", value: `${channel}`, inline: true },
-          { name: "Sorun", value: problem }
+        .setAuthor({ name: "DS SYSTEM", iconURL: client.user.displayAvatarURL() })
+        .setTitle(`DS SYSTEM • ${kategoriIsimleri[category] || category} Ticket Oluşturuldu`)
+        .setDescription(
+          `Destek talebin başarıyla oluşturuldu. Ekibimiz en kısa sürede seninle ilgilenecek.\n\n` +
+          `Bu ticketı açarak **DS SYSTEM** kurallarını kabul etmiş sayılırsın.`
         )
+        .setThumbnail(user.displayAvatarURL({ dynamic: true, size: 256 }))
+        .addFields(
+          {
+            name: "Kullanıcı",
+            value: `\`\`\`${user.username} • ${user.id}\`\`\``,
+            inline: false
+          },
+          {
+            name: "Kategori",
+            value: `\`\`\`${kategoriIsimleri[category] || category}\`\`\``,
+            inline: false
+          },
+          {
+            name: "Ticket Bilgileri",
+            value: `\`\`\`Ticket No: #${ticketNo}\nAçılış: ${new Date().toLocaleString("tr-TR")}\`\`\``,
+            inline: false
+          },
+          {
+            name: "📝 Sorun Açıklaması",
+            value: problem.length > 1000 ? problem.substring(0, 1000) + "..." : problem
+          }
+        )
+        .setImage(config.gifUrl)
+        .setFooter({ text: "DS SYSTEM • Ticket Sistemi" })
         .setTimestamp();
-      logChannel.send({ embeds: [logEmbed] });
+
+      const buttons = new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId("claim_ticket").setLabel("Üstlen").setStyle(ButtonStyle.Primary).setEmoji("🙋"),
+        new ButtonBuilder().setCustomId("close_ticket").setLabel("Kapat").setStyle(ButtonStyle.Danger).setEmoji("🔒"),
+        new ButtonBuilder().setCustomId("add_user").setLabel("Kullanıcı Ekle").setStyle(ButtonStyle.Success).setEmoji("➕"),
+        new ButtonBuilder().setCustomId("remove_user").setLabel("Kullanıcı Çıkar").setStyle(ButtonStyle.Secondary).setEmoji("➖"),
+        new ButtonBuilder().setCustomId("rename_channel").setLabel("Kanal Adı").setStyle(ButtonStyle.Secondary).setEmoji("✏️")
+      );
+
+      await channel.send({
+        content: `${user} | <@&${config.staffRole}>`,
+        embeds: [ticketEmbed],
+        components: [buttons]
+      });
+
+      const logChannel = interaction.guild.channels.cache.get(config.ticketLog);
+      if (logChannel) {
+        const logEmbed = new EmbedBuilder()
+          .setColor("#5865F2")
+          .setTitle("📥 Yeni Ticket Açıldı")
+          .addFields(
+            { name: "Kullanıcı", value: `${user.tag} (${user.id})`, inline: true },
+            { name: "Kategori", value: kategoriIsimleri[category] || category, inline: true },
+            { name: "Ticket No", value: `#${ticketNo}`, inline: true },
+            { name: "Kanal", value: `${channel}`, inline: true },
+            { name: "Sorun", value: problem }
+          )
+          .setTimestamp();
+        logChannel.send({ embeds: [logEmbed] });
+      }
+
+      return interaction.editReply({ content: `Ticket'ın oluşturuldu → ${channel}` });
     }
 
-    return interaction.editReply({ content: `Ticket'ın oluşturuldu → ${channel}` });
+    // Kullanıcı Ekle Modal
+    if (interaction.customId === "modal_add_user") {
+      await interaction.deferReply({ ephemeral: true });
+      if (!interaction.member.roles.cache.has(config.staffRole)) {
+        return interaction.editReply({ content: "Yetkin yok." });
+      }
+      let input = interaction.fields.getTextInputValue("user_id").replace(/[<@!>]/g, "").trim();
+      try {
+        const user = await client.users.fetch(input);
+        await interaction.channel.permissionOverwrites.edit(user.id, {
+          ViewChannel: true,
+          SendMessages: true,
+          AttachFiles: true,
+          ReadMessageHistory: true
+        });
+        await interaction.channel.send(`${user} ticket'a eklendi (${interaction.user} tarafından)`);
+        return interaction.editReply({ content: `${user} başarıyla eklendi.` });
+      } catch {
+        return interaction.editReply({ content: "Kullanıcı bulunamadı. Doğru ID girdiğinizden emin olun." });
+      }
+    }
+
+    // Kullanıcı Çıkar Modal
+    if (interaction.customId === "modal_remove_user") {
+      await interaction.deferReply({ ephemeral: true });
+      if (!interaction.member.roles.cache.has(config.staffRole)) {
+        return interaction.editReply({ content: "Yetkin yok." });
+      }
+      let input = interaction.fields.getTextInputValue("user_id").replace(/[<@!>]/g, "").trim();
+      try {
+        const user = await client.users.fetch(input);
+        // Ticket sahibini çıkaramasın
+        if (interaction.channel.topic?.includes(user.id)) {
+          return interaction.editReply({ content: "Ticket sahibini çıkaramazsın." });
+        }
+        await interaction.channel.permissionOverwrites.delete(user.id);
+        await interaction.channel.send(`${user} ticket'tan çıkarıldı (${interaction.user} tarafından)`);
+        return interaction.editReply({ content: `${user} başarıyla çıkarıldı.` });
+      } catch {
+        return interaction.editReply({ content: "Kullanıcı bulunamadı." });
+      }
+    }
+
+    // Kanal Adı Değiştir Modal
+    if (interaction.customId === "modal_rename_channel") {
+      await interaction.deferReply({ ephemeral: true });
+      if (!interaction.member.roles.cache.has(config.staffRole)) {
+        return interaction.editReply({ content: "Yetkin yok." });
+      }
+      const newName = interaction.fields.getTextInputValue("new_name")
+        .toLowerCase()
+        .replace(/[^a-z0-9-]/g, "")
+        .substring(0, 50);
+
+      if (!newName) {
+        return interaction.editReply({ content: "Geçersiz kanal adı." });
+      }
+
+      try {
+        await interaction.channel.setName(newName);
+        return interaction.editReply({ content: `Kanal adı **${newName}** olarak değiştirildi.` });
+      } catch {
+        return interaction.editReply({ content: "Kanal adı değiştirilemedi." });
+      }
+    }
   }
 });
 
@@ -637,13 +809,13 @@ async function closeTicket(interaction, channel) {
 
   let category = "bilinmiyor";
   const firstMsgs = await channel.messages.fetch({ limit: 5 });
-  const ticketEmbedMsg = firstMsgs.find(m => m.embeds[0]?.title?.includes("Destek Talebi"));
+  const ticketEmbedMsg = firstMsgs.find(m => m.embeds[0]?.title?.includes("Ticket Oluşturuldu"));
   if (ticketEmbedMsg) {
     const title = ticketEmbedMsg.embeds[0].title || "";
-    if (title.includes("GENEL")) category = "genel";
-    else if (title.includes("SATIS") || title.includes("SATIŞ")) category = "satis";
-    else if (title.includes("TEKNIK") || title.includes("TEKNİK")) category = "teknik";
-    else if (title.includes("SIKAYET") || title.includes("ŞİKAYET")) category = "sikayet";
+    if (title.includes("Genel")) category = "genel";
+    else if (title.includes("Satış")) category = "satis";
+    else if (title.includes("Teknik")) category = "teknik";
+    else if (title.includes("Şikayet")) category = "sikayet";
   }
 
   data.history.push({
@@ -664,7 +836,6 @@ async function closeTicket(interaction, channel) {
     try {
       const owner = await client.users.fetch(ownerId);
 
-      // Daha modern puanlama embed'i
       const rateEmbed = new EmbedBuilder()
         .setColor("#FEE75C")
         .setAuthor({ name: "DS SYSTEM", iconURL: client.user.displayAvatarURL() })
