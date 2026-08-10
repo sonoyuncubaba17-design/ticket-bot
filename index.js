@@ -86,15 +86,14 @@ function createPanelEmbed() {
     .setTimestamp();
 }
 
-// Yeni Hatırlatma Embed'i
+// Hatırlatma Embed (ekrandaki gibi)
 function createReminderEmbed() {
   return new EmbedBuilder()
     .setColor("#2b2d31")
     .setTitle("Hatırlatma")
     .setDescription(
-      "Destek talebi açarken lütfen sorununuzu **net, açık ve detaylı** bir şekilde yazın.\n\n" +
-      "Ticket kapandıktan sonra size gelen puanlama mesajında yetkiliyi değil, **aldığınız destek hizmetinin kalitesini** değerlendirin.\n\n" +
-      "Destek sürecinin hızı, çözüm kalitesi ve genel memnuniyetiniz hakkında yapacağınız yorumlar, sistemimizi daha da geliştirmemize yardımcı olur."
+      "Destek talebi açarken veya puanlama yaparken lütfen **yetkiliyi değil**, aldığınız destek hizmetinin kalitesini değerlendirin.\n\n" +
+      "Çözüm süresi, ilgi ve genel memnuniyetiniz hakkında yapacağınız yorumlar, sistemimizi daha da geliştirmemize yardımcı olur."
     )
     .setThumbnail(config.gifUrl)
     .setFooter({ text: "DS SYSTEM • Destek Sistemi" })
@@ -230,7 +229,7 @@ client.on("interactionCreate", async (interaction) => {
         return interaction.reply({ content: "Yetkin yok.", ephemeral: true });
       }
 
-      // Ana panel + Hatırlatma birlikte gönderiliyor
+      // Ana panel + Hatırlatma
       await interaction.channel.send({
         embeds: [createPanelEmbed(), createReminderEmbed()],
         components: [createSelectMenu()]
@@ -319,19 +318,14 @@ client.on("interactionCreate", async (interaction) => {
     }
   }
 
-  // ========== SELECT MENU (KATEGORİ SEÇİMİ) ==========
+  // ========== SELECT MENU ==========
   if (interaction.isStringSelectMenu()) {
     if (interaction.customId === "ticket_select") {
       if (data.blacklist.includes(interaction.user.id)) {
         return interaction.reply({ content: "Blacklist'tesin.", ephemeral: true });
       }
-
       const category = interaction.values[0];
-
-      const modal = new ModalBuilder()
-        .setCustomId(`ticket_modal:${category}`)
-        .setTitle("Destek Talebi");
-
+      const modal = new ModalBuilder().setCustomId(`ticket_modal:${category}`).setTitle("Destek Talebi");
       const input = new TextInputBuilder()
         .setCustomId("problem")
         .setLabel("Sorununuzu detaylı yazın")
@@ -339,7 +333,6 @@ client.on("interactionCreate", async (interaction) => {
         .setRequired(true)
         .setMinLength(10)
         .setMaxLength(1000);
-
       modal.addComponents(new ActionRowBuilder().addComponents(input));
       return interaction.showModal(modal);
     }
@@ -351,14 +344,12 @@ client.on("interactionCreate", async (interaction) => {
       await closeTicket(interaction, interaction.channel);
       return;
     }
-
     if (interaction.customId === "claim_ticket") {
       if (!interaction.member.roles.cache.has(config.staffRole)) {
         return interaction.reply({ content: "Sadece yetkililer.", ephemeral: true });
       }
       return interaction.reply({ content: `🙋 ${interaction.user} ticket'ı üstlendi.` });
     }
-
     if (interaction.customId === "send_message") {
       if (!interaction.member.roles.cache.has(config.staffRole)) {
         return interaction.reply({ content: "Sadece yetkililer.", ephemeral: true });
@@ -373,7 +364,6 @@ client.on("interactionCreate", async (interaction) => {
       modal.addComponents(new ActionRowBuilder().addComponents(input));
       return interaction.showModal(modal);
     }
-
     if (interaction.customId === "add_user") {
       if (!interaction.member.roles.cache.has(config.staffRole)) return interaction.reply({ content: "Yetkin yok.", ephemeral: true });
       const modal = new ModalBuilder().setCustomId("modal_add_user").setTitle("Kullanıcı Ekle");
@@ -381,7 +371,6 @@ client.on("interactionCreate", async (interaction) => {
       modal.addComponents(new ActionRowBuilder().addComponents(input));
       return interaction.showModal(modal);
     }
-
     if (interaction.customId === "remove_user") {
       if (!interaction.member.roles.cache.has(config.staffRole)) return interaction.reply({ content: "Yetkin yok.", ephemeral: true });
       const modal = new ModalBuilder().setCustomId("modal_remove_user").setTitle("Kullanıcı Çıkar");
@@ -389,7 +378,6 @@ client.on("interactionCreate", async (interaction) => {
       modal.addComponents(new ActionRowBuilder().addComponents(input));
       return interaction.showModal(modal);
     }
-
     // PUANLAMA
     if (interaction.customId.startsWith("rate_")) {
       const rating = parseInt(interaction.customId.replace("rate_", ""));
@@ -434,21 +422,16 @@ client.on("interactionCreate", async (interaction) => {
       const category = interaction.customId.split(":")[1];
       const problem = interaction.fields.getTextInputValue("problem");
       const user = interaction.user;
-
       if (data.blacklist.includes(user.id)) {
         return interaction.editReply({ content: "Blacklist'tesin." });
       }
-
       const existing = interaction.guild.channels.cache.find(c => c.topic === `ticket-${user.id}` && c.parentId === config.categoryId);
       if (existing) return interaction.editReply({ content: `Zaten açık ticket'ın var: ${existing}` });
-
       data.ticketCounter++;
       const ticketNo = data.ticketCounter;
       saveData();
-
       const cleanName = user.username.toLowerCase().replace(/[^a-z0-9]/gi, "");
       const channelName = `${category}-${cleanName}`;
-
       const channel = await interaction.guild.channels.create({
         name: channelName,
         type: ChannelType.GuildText,
@@ -460,10 +443,8 @@ client.on("interactionCreate", async (interaction) => {
           { id: config.staffRole, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.ManageMessages, PermissionFlagsBits.AttachFiles] }
         ]
       });
-
       data.stats.opened++;
       saveData();
-
       const kat = {
         genel: "Genel Destek",
         satis: "Satış / Fiyat",
@@ -471,7 +452,6 @@ client.on("interactionCreate", async (interaction) => {
         sikayet: "Şikayet / Öneri",
         diger: "Diğer"
       };
-
       const ticketEmbed = new EmbedBuilder()
         .setColor("#5865F2")
         .setAuthor({ name: "DS SYSTEM", iconURL: client.user.displayAvatarURL({ dynamic: true }) })
@@ -486,7 +466,6 @@ client.on("interactionCreate", async (interaction) => {
         )
         .setImage(config.gifUrl)
         .setTimestamp();
-
       const buttons = new ActionRowBuilder().addComponents(
         new ButtonBuilder().setCustomId("claim_ticket").setLabel("Üstlen").setStyle(ButtonStyle.Primary).setEmoji("🙋"),
         new ButtonBuilder().setCustomId("close_ticket").setLabel("Kapat").setStyle(ButtonStyle.Danger).setEmoji("🔒"),
@@ -494,10 +473,7 @@ client.on("interactionCreate", async (interaction) => {
         new ButtonBuilder().setCustomId("remove_user").setLabel("Kullanıcı Çıkar").setStyle(ButtonStyle.Secondary).setEmoji("➖"),
         new ButtonBuilder().setCustomId("send_message").setLabel("Mesaj Gönder").setStyle(ButtonStyle.Primary).setEmoji("💬")
       );
-
       await channel.send({ content: `${user} | <@&${config.staffRole}>`, embeds: [ticketEmbed], components: [buttons] });
-
-      // Detaylı Log
       const logCh = interaction.guild.channels.cache.get(config.ticketLog);
       if (logCh) {
         const logEmbed = new EmbedBuilder()
@@ -518,10 +494,8 @@ client.on("interactionCreate", async (interaction) => {
           .setTimestamp();
         logCh.send({ embeds: [logEmbed] });
       }
-
       return interaction.editReply({ content: `Ticket oluşturuldu → ${channel}` });
     }
-
     if (interaction.customId === "modal_send_message") {
       await interaction.deferReply({ ephemeral: true });
       const message = interaction.fields.getTextInputValue("message_content");
@@ -546,7 +520,6 @@ client.on("interactionCreate", async (interaction) => {
         return interaction.editReply({ content: "Gönderilemedi." });
       }
     }
-
     if (interaction.customId === "modal_add_user") {
       await interaction.deferReply({ ephemeral: true });
       const id = interaction.fields.getTextInputValue("user_id").replace(/[<@!>]/g, "");
@@ -561,7 +534,6 @@ client.on("interactionCreate", async (interaction) => {
         return interaction.editReply({ content: "Kullanıcı bulunamadı." });
       }
     }
-
     if (interaction.customId === "modal_remove_user") {
       await interaction.deferReply({ ephemeral: true });
       const id = interaction.fields.getTextInputValue("user_id").replace(/[<@!>]/g, "");
@@ -583,12 +555,10 @@ client.on("interactionCreate", async (interaction) => {
 // ========== TICKET KAPATMA ==========
 async function closeTicket(interaction, channel) {
   await interaction.reply({ content: "Ticket kapatılıyor..." });
-
   const messages = await channel.messages.fetch({ limit: 100 });
   const htmlBuffer = createHTMLTranscript(channel, messages);
   const attachment = new AttachmentBuilder(htmlBuffer, { name: `transcript-${channel.name}.html` });
   const ownerId = channel.topic?.split("-")[1];
-
   const logChannel = interaction.guild.channels.cache.get(config.transcriptLog);
   if (logChannel) {
     const closeEmbed = new EmbedBuilder()
@@ -605,7 +575,6 @@ async function closeTicket(interaction, channel) {
       .setTimestamp();
     await logChannel.send({ embeds: [closeEmbed], files: [attachment] });
   }
-
   if (ownerId) {
     try {
       const owner = await client.users.fetch(ownerId);
@@ -621,7 +590,6 @@ async function closeTicket(interaction, channel) {
         .setImage(config.gifUrl)
         .setFooter({ text: "DS SYSTEM • Destek Puanlaması" })
         .setTimestamp();
-
       const rateButtons = new ActionRowBuilder().addComponents(
         new ButtonBuilder().setCustomId("rate_1").setLabel("1").setStyle(ButtonStyle.Danger),
         new ButtonBuilder().setCustomId("rate_2").setLabel("2").setStyle(ButtonStyle.Secondary),
@@ -629,16 +597,13 @@ async function closeTicket(interaction, channel) {
         new ButtonBuilder().setCustomId("rate_4").setLabel("4").setStyle(ButtonStyle.Success),
         new ButtonBuilder().setCustomId("rate_5").setLabel("5").setStyle(ButtonStyle.Success)
       );
-
       await owner.send({ embeds: [rateEmbed], components: [rateButtons] });
     } catch {}
   }
-
   data.stats.closed++;
   if (!data.stats.staffStats[interaction.user.id]) data.stats.staffStats[interaction.user.id] = 0;
   data.stats.staffStats[interaction.user.id]++;
   saveData();
-
   setTimeout(() => channel.delete().catch(() => {}), 4000);
 }
 
