@@ -71,7 +71,7 @@ function createPanelEmbed() {
       "• Sohbete “Yetkili var mı?” yazmak süreci hızlandırmaz\n\n" +
       "Anlayışınız için teşekkürler."
     )
-    .setThumbnail(config.gifUrl) // Sağ üste GIF eklendi
+    .setThumbnail(config.gifUrl)
     .setImage(config.gifUrl)
     .setFooter({ text: "DS SYSTEM • Profesyonel Destek Sistemi" })
     .setTimestamp();
@@ -170,7 +170,7 @@ client.once("ready", async () => {
       { name: "mesaj", description: "Ticket sahibine mesaj gönderir", options: [{ name: "mesaj", description: "Mesaj", type: 3, required: true }] },
       { name: "ekle", description: "Ticket'a üye ekler", options: [{ name: "kisi", description: "Kişi", type: 6, required: true }] },
       { name: "kapat", description: "Ticket'ı kapatır" },
-      { name: "aktif", description: "Sunucu aktif mesajını gönderir" }
+      { name: "aktif", description: "Sistem durumunu gösterir" }
     ]);
   }
 });
@@ -215,7 +215,7 @@ client.on("interactionCreate", async (interaction) => {
       });
       return interaction.reply({ content: "Panel gönderildi!", ephemeral: true });
     }
-    // /hatirlatma (ayrı komut)
+    // /hatirlatma
     if (interaction.commandName === "hatirlatma") {
       if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
         return interaction.reply({ content: "Yetkin yok.", ephemeral: true });
@@ -223,31 +223,56 @@ client.on("interactionCreate", async (interaction) => {
       await interaction.channel.send({ embeds: [createReminderEmbed()] });
       return interaction.reply({ content: "Hatırlatma gönderildi!", ephemeral: true });
     }
+    // /aktif (Yeni tasarım)
     if (interaction.commandName === "aktif") {
       if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
         return interaction.reply({ content: "Sadece yöneticiler kullanabilir.", ephemeral: true });
       }
-      const staffRole = interaction.guild.roles.cache.get(config.staffRole);
-      const aktifYetkili = staffRole ? staffRole.members.filter(m => ["online", "idle", "dnd"].includes(m.presence?.status)).size : 0;
-      const acikTicket = interaction.guild.channels.cache.filter(c => c.parentId === config.categoryId && c.topic?.startsWith("ticket-")).size;
+
+      const guild = interaction.guild;
+      const uptime = process.uptime();
+      const days = Math.floor(uptime / 86400);
+      const hours = Math.floor((uptime % 86400) / 3600);
+      const minutes = Math.floor((uptime % 3600) / 60);
+      const seconds = Math.floor(uptime % 60);
+      const uptimeText = `${days}g ${hours}sa ${minutes}dk ${seconds}sn`;
+
+      const memory = (process.memoryUsage().heapUsed / 1024 / 1024).toFixed(1);
+      const ping = client.ws.ping;
+
       const embed = new EmbedBuilder()
-        .setColor("#00FF9D")
+        .setColor("#57F287")
         .setAuthor({ name: "DS SYSTEM", iconURL: client.user.displayAvatarURL({ dynamic: true }) })
-        .setTitle("🟢 DS SYSTEM Aktif!")
-        .setDescription("Sistem sorunsuz şekilde çalışıyor.\nTüm destek kanalları hazır ve aktif.")
+        .setTitle("🟢 DS SYSTEM Canlı Sistem Durumu")
+        .setDescription("Tüm sistemler sorunsuz çalışıyor.")
+        .setThumbnail(config.gifUrl)
         .addFields(
-          { name: "Aktif Yetkili", value: `\`\`\`${aktifYetkili}\`\`\``, inline: true },
-          { name: "Açık Ticket", value: `\`\`\`${acikTicket}\`\`\``, inline: true },
-          { name: "Toplam Üye", value: `\`\`\`${interaction.guild.memberCount}\`\`\``, inline: true },
-          { name: "Bot Durumu", value: "```🟢 Çevrimiçi```", inline: true },
-          { name: "Çalışma Süresi", value: `<t:${Math.floor(client.readyTimestamp / 1000)}:R>`, inline: true }
+          {
+            name: "📡 Bağlantı Sağlığı",
+            value: `\`\`\`\nDurum     : Çevrimiçi\nGecikme   : ${ping} ms\nÇalışma   : ${uptimeText}\n\`\`\``,
+            inline: false
+          },
+          {
+            name: "🔄 Yeniden Başlatma Takibi",
+            value: `\`\`\`\nSon açılış : <t:${Math.floor(client.readyTimestamp / 1000)}:f>\nToplam    : ${data.stats.opened || 0} ticket\n\`\`\``,
+            inline: false
+          },
+          {
+            name: "🖥️ Sunucu ve Sistem",
+            value: `\`\`\`\nÜye       : ${guild.memberCount}\nKanal     : ${guild.channels.cache.size}\nRol       : ${guild.roles.cache.size}\nBellek    : ${memory} MB\nNode.js   : ${process.version}\n\`\`\``,
+            inline: false
+          },
+          {
+            name: "💜 Son Canlılık Sinyali",
+            value: `<t:${Math.floor(Date.now() / 1000)}:F> • az önce`,
+            inline: false
+          }
         )
-        .setImage(config.gifUrl)
-        .setThumbnail(client.user.displayAvatarURL({ dynamic: true }))
-        .setFooter({ text: "DS SYSTEM • Discord Bot" })
+        .setFooter({ text: "DS SYSTEM • Sistem Takibi" })
         .setTimestamp();
+
       await interaction.channel.send({ embeds: [embed] });
-      return interaction.reply({ content: "Aktif mesajı gönderildi!", ephemeral: true });
+      return interaction.reply({ content: "Sistem durumu gönderildi!", ephemeral: true });
     }
     if (interaction.commandName === "mesaj") {
       await interaction.deferReply({ ephemeral: true });
