@@ -36,6 +36,7 @@ const config = {
   categoryId: process.env.CATEGORY_ID,
   ratingLog: "1535549655621042197",
   gifUrl: "https://cdn.discordapp.com/attachments/1535074576722296893/1536297715447636048/DS_hizli_kar.gif?ex=6a7ae43e&is=6a7992be&hm=33ccb6b78435399366d2ad31bc4bc95d1a0dcc2287c1aea31b73e30c76cdf2ae&",
+  thumbnailUrl: "https://cdn.discordapp.com/attachments/1535074576722296893/1536309951549538324/square-image.jpg?ex=6a7aefa3&is=6a799e23&hm=5f3b35a0e09d510654e208fa9bc75371d9e52f21b7cb317708d289e5560852bb&",
   voiceChannelId: "1535776380631916555"
 };
 const dataPath = path.join(__dirname, 'data.json');
@@ -71,8 +72,8 @@ function createPanelEmbed() {
       "• Sohbete “Yetkili var mı?” yazmak süreci hızlandırmaz\n\n" +
       "Anlayışınız için teşekkürler."
     )
-    .setThumbnail(config.gifUrl) // Sağ üst (kare)
-    .setImage(config.gifUrl)     // Altta büyük
+    .setThumbnail(config.thumbnailUrl) // Sağ üst kare görsel
+    .setImage(config.gifUrl)           // Altta hareketli GIF
     .setFooter({ text: "DS SYSTEM • Profesyonel Destek Sistemi" })
     .setTimestamp();
 }
@@ -84,7 +85,7 @@ function createReminderEmbed() {
       "Destek talebi açarken veya puanlama yaparken lütfen **yetkiliyi değil**, aldığınız destek hizmetinin kalitesini değerlendirin.\n\n" +
       "Çözüm süresi, ilgi ve genel memnuniyetiniz hakkında yapacağınız yorumlar, sistemimizi daha da geliştirmemize yardımcı olur."
     )
-    .setThumbnail(config.gifUrl)
+    .setThumbnail(config.thumbnailUrl)
     .setFooter({ text: "DS SYSTEM • Destek Sistemi" })
     .setTimestamp();
 }
@@ -241,7 +242,7 @@ client.on("interactionCreate", async (interaction) => {
         .setAuthor({ name: "DS SYSTEM", iconURL: client.user.displayAvatarURL({ dynamic: true }) })
         .setTitle("🟢 DS SYSTEM Canlı Sistem Durumu")
         .setDescription("Tüm sistemler sorunsuz çalışıyor. Panel her 10 saniyede bir otomatik yenilenir.")
-        .setThumbnail(config.gifUrl) // Sağ üst kare GIF
+        .setThumbnail(config.thumbnailUrl) // Sağ üst kare görsel
         .addFields(
           {
             name: "📡 Bağlantı Sağlığı",
