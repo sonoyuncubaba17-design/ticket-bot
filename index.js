@@ -36,7 +36,7 @@ const config = {
   categoryId: process.env.CATEGORY_ID,
   ratingLog: "1535549655621042197",
   gifUrl: "https://cdn.discordapp.com/attachments/1535074576722296893/1536297715447636048/DS_hizli_kar.gif?ex=6a7ae43e&is=6a7992be&hm=33ccb6b78435399366d2ad31bc4bc95d1a0dcc2287c1aea31b73e30c76cdf2ae&",
-  thumbnailUrl: "https://cdn.discordapp.com/attachments/1535074576722296893/1536309951549538324/square-image.jpg?ex=6a7aefa3&is=6a799e23&hm=5f3b35a0e09d510654e208fa9bc75371d9e52f21b7cb317708d289e5560852bb&",
+  thumbnailUrl: "https://cdn.discordapp.com/attachments/1535074576722296893/1536314156737765396/ChatGPT_Image_10_Agu_2026_13_05_54.gif?ex=6a7af38e&is=6a79a20e&hm=a251fef9d525f3c5185b64bc3ddbe29d80caa9b7cee2a27e9f63b921c98c5a42&",
   voiceChannelId: "1535776380631916555"
 };
 const dataPath = path.join(__dirname, 'data.json');
@@ -72,8 +72,8 @@ function createPanelEmbed() {
       "• Sohbete “Yetkili var mı?” yazmak süreci hızlandırmaz\n\n" +
       "Anlayışınız için teşekkürler."
     )
-    .setThumbnail(config.thumbnailUrl) // Sağ üst kare görsel
-    .setImage(config.gifUrl)           // Altta hareketli GIF
+    .setThumbnail(config.thumbnailUrl)
+    .setImage(config.gifUrl)
     .setFooter({ text: "DS SYSTEM • Profesyonel Destek Sistemi" })
     .setTimestamp();
 }
@@ -171,7 +171,8 @@ client.once("ready", async () => {
       { name: "mesaj", description: "Ticket sahibine mesaj gönderir", options: [{ name: "mesaj", description: "Mesaj", type: 3, required: true }] },
       { name: "ekle", description: "Ticket'a üye ekler", options: [{ name: "kisi", description: "Kişi", type: 6, required: true }] },
       { name: "kapat", description: "Ticket'ı kapatır" },
-      { name: "aktif", description: "Sistem durumunu gösterir" }
+      { name: "aktif", description: "Sistem durumunu gösterir" },
+      { name: "uyari", description: "Kullanıcıya uyarı gönderir" }
     ]);
   }
 });
@@ -226,7 +227,6 @@ client.on("interactionCreate", async (interaction) => {
       if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
         return interaction.reply({ content: "Sadece yöneticiler kullanabilir.", ephemeral: true });
       }
-
       const guild = interaction.guild;
       const uptime = process.uptime();
       const days = Math.floor(uptime / 86400);
@@ -236,13 +236,12 @@ client.on("interactionCreate", async (interaction) => {
       const uptimeText = `${days}g ${hours}sa ${minutes}dk ${seconds}sn`;
       const memory = (process.memoryUsage().heapUsed / 1024 / 1024).toFixed(1);
       const ping = client.ws.ping;
-
       const embed = new EmbedBuilder()
         .setColor("#57F287")
         .setAuthor({ name: "DS SYSTEM", iconURL: client.user.displayAvatarURL({ dynamic: true }) })
         .setTitle("🟢 DS SYSTEM Canlı Sistem Durumu")
         .setDescription("Tüm sistemler sorunsuz çalışıyor. Panel her 10 saniyede bir otomatik yenilenir.")
-        .setThumbnail(config.thumbnailUrl) // Sağ üst kare görsel
+        .setThumbnail(config.thumbnailUrl)
         .addFields(
           {
             name: "📡 Bağlantı Sağlığı",
@@ -267,9 +266,34 @@ client.on("interactionCreate", async (interaction) => {
         )
         .setFooter({ text: "DS SYSTEM • 7/24 Sistem Takibi" })
         .setTimestamp();
-
       await interaction.channel.send({ embeds: [embed] });
       return interaction.reply({ content: "Sistem durumu gönderildi!", ephemeral: true });
+    }
+    if (interaction.commandName === "uyari") {
+      if (!interaction.member.roles.cache.has(config.staffRole) && !interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
+        return interaction.reply({ content: "Bu komutu sadece yetkililer kullanabilir.", ephemeral: true });
+      }
+      const modal = new ModalBuilder()
+        .setCustomId("uyari_modal")
+        .setTitle("Uyarı Gönder");
+      const idInput = new TextInputBuilder()
+        .setCustomId("discord_id")
+        .setLabel("Discord ID")
+        .setStyle(TextInputStyle.Short)
+        .setPlaceholder("Örn: 1332700232498130964")
+        .setRequired(true);
+      const reasonInput = new TextInputBuilder()
+        .setCustomId("sebep")
+        .setLabel("Uyarı Sebebi")
+        .setStyle(TextInputStyle.Paragraph)
+        .setPlaceholder("Örn: Hızlı in bin")
+        .setRequired(true)
+        .setMaxLength(500);
+      modal.addComponents(
+        new ActionRowBuilder().addComponents(idInput),
+        new ActionRowBuilder().addComponents(reasonInput)
+      );
+      return interaction.showModal(modal);
     }
     if (interaction.commandName === "mesaj") {
       await interaction.deferReply({ ephemeral: true });
@@ -417,6 +441,34 @@ client.on("interactionCreate", async (interaction) => {
   }
   // ========== MODAL ==========
   if (interaction.isModalSubmit()) {
+    if (interaction.customId === "uyari_modal") {
+      await interaction.deferReply({ ephemeral: true });
+      const discordId = interaction.fields.getTextInputValue("discord_id").replace(/[<@!>]/g, "");
+      const sebep = interaction.fields.getTextInputValue("sebep");
+      try {
+        const user = await client.users.fetch(discordId);
+        const uyariEmbed = new EmbedBuilder()
+          .setColor("#ED4245")
+          .setAuthor({ name: "DS SYSTEM • Uyarı Sistemi", iconURL: client.user.displayAvatarURL({ dynamic: true }) })
+          .setTitle("⚠️ Uyarı")
+          .setThumbnail(user.displayAvatarURL({ dynamic: true }))
+          .addFields(
+            { name: "Discord ID", value: `\`${user.id}\``, inline: false },
+            { name: "Uyarı Sebebi", value: sebep, inline: false },
+            { name: "Tarih & Saat", value: `<t:${Math.floor(Date.now() / 1000)}:f>`, inline: false },
+            { name: "Yetkili", value: `${interaction.user}`, inline: false }
+          )
+          .setFooter({ text: "DS SYSTEM • Uyarı Sistemi" })
+          .setTimestamp();
+        await interaction.channel.send({ embeds: [uyariEmbed] });
+        try {
+          await user.send({ embeds: [uyariEmbed] });
+        } catch {}
+        return interaction.editReply({ content: `Uyarı gönderildi → **${user.tag}**` });
+      } catch {
+        return interaction.editReply({ content: "Kullanıcı bulunamadı. ID'yi kontrol et." });
+      }
+    }
     if (interaction.customId.startsWith("ticket_modal:")) {
       await interaction.deferReply({ ephemeral: true });
       const category = interaction.customId.split(":")[1];
