@@ -82,7 +82,6 @@ function createPanelEmbed() {
     .setTimestamp();
 }
 
-// Ayrı Hatırlatma Embed'i
 function createReminderEmbed() {
   return new EmbedBuilder()
     .setColor("#2b2d31")
@@ -222,7 +221,7 @@ client.on("guildMemberAdd", async (member) => {
 client.on("interactionCreate", async (interaction) => {
   if (interaction.isChatInputCommand()) {
 
-    // /panel komutu
+    // /panel
     if (interaction.commandName === "panel") {
       if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
         return interaction.reply({ content: "Yetkin yok.", ephemeral: true });
@@ -234,7 +233,7 @@ client.on("interactionCreate", async (interaction) => {
       return interaction.reply({ content: "Panel gönderildi!", ephemeral: true });
     }
 
-    // /hatirlatma komutu (ayrı)
+    // /hatirlatma (ayrı komut)
     if (interaction.commandName === "hatirlatma") {
       if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
         return interaction.reply({ content: "Yetkin yok.", ephemeral: true });
