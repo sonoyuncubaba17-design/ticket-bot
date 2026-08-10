@@ -37,7 +37,7 @@ const config = {
   transcriptLog: process.env.TRANSCRIPT_LOG,
   categoryId: process.env.CATEGORY_ID,
   ratingLog: "1535549655621042197",
-  gifUrl: "https://cdn.discordapp.com/attachments/1535074576722296893/1536294598366859354/DS_hizli_kar.gif?ex=6a7ae157&is=6a798fd7&hm=9f5d8af6d67b6c88a714f422569d1e0b50be6d4bc5b1f7129357ecd24fb00f53&",
+  gifUrl: "https://cdn.discordapp.com/attachments/1535074576722296893/1536297715447636048/DS_hizli_kar.gif?ex=6a7ae43e&is=6a7992be&hm=33ccb6b78435399366d2ad31bc4bc95d1a0dcc2287c1aea31b73e30c76cdf2ae&",
   voiceChannelId: "1535776380631916555"
 };
 
@@ -71,10 +71,6 @@ function createPanelEmbed() {
     .setTitle("🎫 Destek Talebi Oluştur")
     .setDescription(
       "Aşağıdaki menüden size uygun kategoriyi seçerek destek talebi oluşturabilirsiniz.\n\n" +
-      "**Nasıl Çalışır?**\n" +
-      "1️⃣ Menüden kategori seçin\n" +
-      "2️⃣ Açılan forma sorununuzu yazın\n" +
-      "3️⃣ Ticket otomatik oluşur ve yetkililere bildirilir\n\n" +
       "**Kurallar**\n" +
       "• Aynı anda sadece **1 adet** ticket açabilirsiniz\n" +
       "• Sorununuzu net ve detaylı yazın\n" +
@@ -86,7 +82,7 @@ function createPanelEmbed() {
     .setTimestamp();
 }
 
-// Hatırlatma Embed (ekrandaki gibi)
+// Ayrı Hatırlatma Embed'i
 function createReminderEmbed() {
   return new EmbedBuilder()
     .setColor("#2b2d31")
@@ -183,6 +179,7 @@ client.once("ready", async () => {
 
     await guild.commands.set([
       { name: "panel", description: "Ticket panelini gönderir" },
+      { name: "hatirlatma", description: "Hatırlatma mesajını gönderir" },
       { name: "mesaj", description: "Ticket sahibine mesaj gönderir", options: [{ name: "mesaj", description: "Mesaj", type: 3, required: true }] },
       { name: "ekle", description: "Ticket'a üye ekler", options: [{ name: "kisi", description: "Kişi", type: 6, required: true }] },
       { name: "kapat", description: "Ticket'ı kapatır" },
@@ -224,18 +221,26 @@ client.on("guildMemberAdd", async (member) => {
 
 client.on("interactionCreate", async (interaction) => {
   if (interaction.isChatInputCommand()) {
+
+    // /panel komutu
     if (interaction.commandName === "panel") {
       if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
         return interaction.reply({ content: "Yetkin yok.", ephemeral: true });
       }
-
-      // Ana panel + Hatırlatma
       await interaction.channel.send({
-        embeds: [createPanelEmbed(), createReminderEmbed()],
+        embeds: [createPanelEmbed()],
         components: [createSelectMenu()]
       });
-
       return interaction.reply({ content: "Panel gönderildi!", ephemeral: true });
+    }
+
+    // /hatirlatma komutu (ayrı)
+    if (interaction.commandName === "hatirlatma") {
+      if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
+        return interaction.reply({ content: "Yetkin yok.", ephemeral: true });
+      }
+      await interaction.channel.send({ embeds: [createReminderEmbed()] });
+      return interaction.reply({ content: "Hatırlatma gönderildi!", ephemeral: true });
     }
 
     if (interaction.commandName === "aktif") {
