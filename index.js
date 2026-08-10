@@ -71,8 +71,8 @@ function createPanelEmbed() {
       "• Sohbete “Yetkili var mı?” yazmak süreci hızlandırmaz\n\n" +
       "Anlayışınız için teşekkürler."
     )
-    .setThumbnail(config.gifUrl)
-    .setImage(config.gifUrl)
+    .setThumbnail(config.gifUrl) // Sağ üst (kare)
+    .setImage(config.gifUrl)     // Altta büyük
     .setFooter({ text: "DS SYSTEM • Profesyonel Destek Sistemi" })
     .setTimestamp();
 }
@@ -221,7 +221,6 @@ client.on("interactionCreate", async (interaction) => {
       await interaction.channel.send({ embeds: [createReminderEmbed()] });
       return interaction.reply({ content: "Hatırlatma gönderildi!", ephemeral: true });
     }
-    // ========== /aktif (Yeni tasarım) ==========
     if (interaction.commandName === "aktif") {
       if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
         return interaction.reply({ content: "Sadece yöneticiler kullanabilir.", ephemeral: true });
@@ -234,19 +233,15 @@ client.on("interactionCreate", async (interaction) => {
       const minutes = Math.floor((uptime % 3600) / 60);
       const seconds = Math.floor(uptime % 60);
       const uptimeText = `${days}g ${hours}sa ${minutes}dk ${seconds}sn`;
-
       const memory = (process.memoryUsage().heapUsed / 1024 / 1024).toFixed(1);
       const ping = client.ws.ping;
 
       const embed = new EmbedBuilder()
         .setColor("#57F287")
-        .setAuthor({ 
-          name: "DS SYSTEM", 
-          iconURL: client.user.displayAvatarURL({ dynamic: true }) 
-        })
+        .setAuthor({ name: "DS SYSTEM", iconURL: client.user.displayAvatarURL({ dynamic: true }) })
         .setTitle("🟢 DS SYSTEM Canlı Sistem Durumu")
         .setDescription("Tüm sistemler sorunsuz çalışıyor. Panel her 10 saniyede bir otomatik yenilenir.")
-        .setThumbnail(config.gifUrl)
+        .setThumbnail(config.gifUrl) // Sağ üst kare GIF
         .addFields(
           {
             name: "📡 Bağlantı Sağlığı",
