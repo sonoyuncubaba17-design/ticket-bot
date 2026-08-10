@@ -269,6 +269,7 @@ client.on("interactionCreate", async (interaction) => {
       await interaction.channel.send({ embeds: [embed] });
       return interaction.reply({ content: "Sistem durumu gönderildi!", ephemeral: true });
     }
+    // ========== /uyari KOMUTU ==========
     if (interaction.commandName === "uyari") {
       if (!interaction.member.roles.cache.has(config.staffRole) && !interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
         return interaction.reply({ content: "Bu komutu sadece yetkililer kullanabilir.", ephemeral: true });
@@ -441,6 +442,7 @@ client.on("interactionCreate", async (interaction) => {
   }
   // ========== MODAL ==========
   if (interaction.isModalSubmit()) {
+    // Uyarı Modal
     if (interaction.customId === "uyari_modal") {
       await interaction.deferReply({ ephemeral: true });
       const discordId = interaction.fields.getTextInputValue("discord_id").replace(/[<@!>]/g, "");
