@@ -15,7 +15,7 @@ const {
   TextInputBuilder,
   TextInputStyle
 } = require('discord.js');
-const { joinVoiceChannel } = require('@discordjs/voice');
+const { joinVoiceChannel, getVoiceConnection } = require('@discordjs/voice');
 const fs = require('fs');
 const path = require('path');
 const client = new Client({
@@ -59,9 +59,35 @@ function saveData() {
   fs.writeFileSync(dataPath, JSON.stringify(data, null, 2));
 }
 loadData();
+
+// Ses kanalına bağlanma fonksiyonu
+function joinVoice() {
+  const guild = client.guilds.cache.get(process.env.GUILD_ID);
+  if (!guild) return;
+
+  const voiceChannel = guild.channels.cache.get(config.voiceChannelId);
+  if (!voiceChannel || voiceChannel.type !== ChannelType.GuildVoice) return;
+
+  const existing = getVoiceConnection(guild.id);
+  if (existing) return;
+
+  try {
+    joinVoiceChannel({
+      channelId: voiceChannel.id,
+      guildId: guild.id,
+      adapterCreator: guild.voiceAdapterCreator,
+      selfDeaf: true,
+      selfMute: true
+    });
+    console.log("✅ Ses kanalına bağlandı");
+  } catch (e) {
+    console.log("Ses kanalına bağlanırken hata:", e.message);
+  }
+}
+
 function createPanelEmbed() {
   return new EmbedBuilder()
-    .setColor("#5865F2")
+    .setColor("#2b2d31") // Mavi çubuk kaldırıldı, koyu siyah-beyaz
     .setAuthor({ name: "DS SYSTEM • Destek Merkezi", iconURL: client.user.displayAvatarURL({ dynamic: true }) })
     .setTitle("🎫 Destek Talebi Oluştur")
     .setDescription(
@@ -77,6 +103,7 @@ function createPanelEmbed() {
     .setFooter({ text: "DS SYSTEM • Profesyonel Destek Sistemi" })
     .setTimestamp();
 }
+
 function createReminderEmbed() {
   return new EmbedBuilder()
     .setColor("#2b2d31")
@@ -89,6 +116,7 @@ function createReminderEmbed() {
     .setFooter({ text: "DS SYSTEM • Destek Sistemi" })
     .setTimestamp();
 }
+
 function createSelectMenu() {
   return new ActionRowBuilder().addComponents(
     new StringSelectMenuBuilder()
@@ -128,6 +156,7 @@ function createSelectMenu() {
       )
   );
 }
+
 function createHTMLTranscript(channel, messages) {
   let html = `<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8"><title>Transcript</title>
   <style>
@@ -148,23 +177,21 @@ function createHTMLTranscript(channel, messages) {
   html += `</body></html>`;
   return Buffer.from(html, 'utf-8');
 }
+
 client.once("ready", async () => {
   console.log(`✅ ${client.user.tag} aktif!`);
   client.user.setActivity("dadascxn 🤍 efecan", { type: 3 });
+
+  // Ses kanalına bağlan
+  joinVoice();
+
+  // Her 5 dakikada bir kontrol et (koparsa tekrar bağlansın)
+  setInterval(() => {
+    joinVoice();
+  }, 5 * 60 * 1000);
+
   const guild = client.guilds.cache.get(process.env.GUILD_ID);
   if (guild) {
-    const voiceChannel = guild.channels.cache.get(config.voiceChannelId);
-    if (voiceChannel?.type === ChannelType.GuildVoice) {
-      try {
-        joinVoiceChannel({
-          channelId: voiceChannel.id,
-          guildId: guild.id,
-          adapterCreator: guild.voiceAdapterCreator,
-          selfDeaf: true,
-          selfMute: true
-        });
-      } catch (e) {}
-    }
     await guild.commands.set([
       { name: "panel", description: "Ticket panelini gönderir" },
       { name: "hatirlatma", description: "Hatırlatma mesajını gönderir" },
@@ -176,6 +203,7 @@ client.once("ready", async () => {
     ]);
   }
 });
+
 // ========== HOŞ GELDİN ==========
 client.on("guildMemberAdd", async (member) => {
   try {
@@ -196,7 +224,7 @@ client.on("guildMemberAdd", async (member) => {
       .setFooter({ text: "DS SYSTEM • Destek Sistemi" })
       .setTimestamp();
     const big = new EmbedBuilder()
-      .setColor("#5865F2")
+      .setColor("#2b2d31")
       .setTitle("Hoşgeldin!")
       .setDescription("Sunucumuza hoşgeldin, kuralları okumayı unutma!")
       .setThumbnail(client.user.displayAvatarURL({ dynamic: true }))
@@ -204,6 +232,7 @@ client.on("guildMemberAdd", async (member) => {
     await member.send({ embeds: [embed, big] }).catch(() => {});
   } catch (e) {}
 });
+
 client.on("interactionCreate", async (interaction) => {
   if (interaction.isChatInputCommand()) {
     if (interaction.commandName === "panel") {
@@ -269,7 +298,6 @@ client.on("interactionCreate", async (interaction) => {
       await interaction.channel.send({ embeds: [embed] });
       return interaction.reply({ content: "Sistem durumu gönderildi!", ephemeral: true });
     }
-    // ========== /uyari KOMUTU ==========
     if (interaction.commandName === "uyari") {
       if (!interaction.member.roles.cache.has(config.staffRole) && !interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
         return interaction.reply({ content: "Bu komutu sadece yetkililer kullanabilir.", ephemeral: true });
@@ -442,7 +470,6 @@ client.on("interactionCreate", async (interaction) => {
   }
   // ========== MODAL ==========
   if (interaction.isModalSubmit()) {
-    // Uyarı Modal
     if (interaction.customId === "uyari_modal") {
       await interaction.deferReply({ ephemeral: true });
       const discordId = interaction.fields.getTextInputValue("discord_id").replace(/[<@!>]/g, "");
@@ -507,7 +534,7 @@ client.on("interactionCreate", async (interaction) => {
         diger: "Diğer"
       };
       const ticketEmbed = new EmbedBuilder()
-        .setColor("#5865F2")
+        .setColor("#2b2d31")
         .setAuthor({ name: "DS SYSTEM", iconURL: client.user.displayAvatarURL({ dynamic: true }) })
         .setTitle(`🎫 ${kat[category]} Ticket Oluşturuldu`)
         .setDescription("Destek talebin oluşturuldu. Yetkililer en kısa sürede ilgilenecek.")
@@ -531,7 +558,7 @@ client.on("interactionCreate", async (interaction) => {
       const logCh = interaction.guild.channels.cache.get(config.ticketLog);
       if (logCh) {
         const logEmbed = new EmbedBuilder()
-          .setColor("#5865F2")
+          .setColor("#2b2d31")
           .setAuthor({ name: "DS SYSTEM", iconURL: client.user.displayAvatarURL({ dynamic: true }) })
           .setTitle("📥 Yeni Ticket Açıldı")
           .addFields(
@@ -605,6 +632,7 @@ client.on("interactionCreate", async (interaction) => {
     }
   }
 });
+
 // ========== TICKET KAPATMA ==========
 async function closeTicket(interaction, channel) {
   await interaction.reply({ content: "Ticket kapatılıyor..." });
@@ -659,4 +687,5 @@ async function closeTicket(interaction, channel) {
   saveData();
   setTimeout(() => channel.delete().catch(() => {}), 4000);
 }
+
 client.login(process.env.TOKEN);
