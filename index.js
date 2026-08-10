@@ -35,7 +35,7 @@ const config = {
   transcriptLog: process.env.TRANSCRIPT_LOG,
   categoryId: process.env.CATEGORY_ID,
   ratingLog: "1535549655621042197",
-  gifUrl: "https://cdn.discordapp.com/attachments/1535547742397399121/1535659790846402621/DS_hizli_kar.gif?ex=6a789221&is=6a7740a1&hm=24b5cc21dde58dc6418e0d86fc4494f4dc2476e711b5d3acc60929d2fe56397a&",
+  gifUrl: "https://cdn.discordapp.com/attachments/1535074576722296893/1536294598366859354/DS_hizli_kar.gif?ex=6a7ae157&is=6a798fd7&hm=9f5d8af6d67b6c88a714f422569d1e0b50be6d4bc5b1f7129357ecd24fb00f53&",
   voiceChannelId: "1535776380631916555"
 };
 const dataPath = path.join(__dirname, 'data.json');
