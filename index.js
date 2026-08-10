@@ -204,7 +204,6 @@ client.on("guildMemberAdd", async (member) => {
 });
 client.on("interactionCreate", async (interaction) => {
   if (interaction.isChatInputCommand()) {
-    // /panel
     if (interaction.commandName === "panel") {
       if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
         return interaction.reply({ content: "Yetkin yok.", ephemeral: true });
@@ -215,7 +214,6 @@ client.on("interactionCreate", async (interaction) => {
       });
       return interaction.reply({ content: "Panel gönderildi!", ephemeral: true });
     }
-    // /hatirlatma
     if (interaction.commandName === "hatirlatma") {
       if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
         return interaction.reply({ content: "Yetkin yok.", ephemeral: true });
@@ -223,7 +221,7 @@ client.on("interactionCreate", async (interaction) => {
       await interaction.channel.send({ embeds: [createReminderEmbed()] });
       return interaction.reply({ content: "Hatırlatma gönderildi!", ephemeral: true });
     }
-    // /aktif (Yeni tasarım)
+    // ========== /aktif (Yeni tasarım) ==========
     if (interaction.commandName === "aktif") {
       if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
         return interaction.reply({ content: "Sadece yöneticiler kullanabilir.", ephemeral: true });
@@ -242,9 +240,12 @@ client.on("interactionCreate", async (interaction) => {
 
       const embed = new EmbedBuilder()
         .setColor("#57F287")
-        .setAuthor({ name: "DS SYSTEM", iconURL: client.user.displayAvatarURL({ dynamic: true }) })
+        .setAuthor({ 
+          name: "DS SYSTEM", 
+          iconURL: client.user.displayAvatarURL({ dynamic: true }) 
+        })
         .setTitle("🟢 DS SYSTEM Canlı Sistem Durumu")
-        .setDescription("Tüm sistemler sorunsuz çalışıyor.")
+        .setDescription("Tüm sistemler sorunsuz çalışıyor. Panel her 10 saniyede bir otomatik yenilenir.")
         .setThumbnail(config.gifUrl)
         .addFields(
           {
@@ -254,21 +255,21 @@ client.on("interactionCreate", async (interaction) => {
           },
           {
             name: "🔄 Yeniden Başlatma Takibi",
-            value: `\`\`\`\nSon açılış : <t:${Math.floor(client.readyTimestamp / 1000)}:f>\nToplam    : ${data.stats.opened || 0} ticket\n\`\`\``,
+            value: `Son açılış: <t:${Math.floor(client.readyTimestamp / 1000)}:f>\nToplam açılış: ${data.stats.opened || 0}\nÇalışma süresi sıfırlandıysa bot yeniden başlatılmıştır.`,
             inline: false
           },
           {
             name: "🖥️ Sunucu ve Sistem",
-            value: `\`\`\`\nÜye       : ${guild.memberCount}\nKanal     : ${guild.channels.cache.size}\nRol       : ${guild.roles.cache.size}\nBellek    : ${memory} MB\nNode.js   : ${process.version}\n\`\`\``,
+            value: `\`\`\`\nÜye       : ${guild.memberCount}\nKanal     : ${guild.channels.cache.size}\nRol       : ${guild.roles.cache.size}\nBellek    : ${memory} MB\nNode.js   : ${process.version}\nShard     : 0\n\`\`\``,
             inline: false
           },
           {
             name: "💜 Son Canlılık Sinyali",
-            value: `<t:${Math.floor(Date.now() / 1000)}:F> • az önce`,
+            value: `<t:${Math.floor(Date.now() / 1000)}:F> • az önce\nSon canlılık sinyali 20 saniyeden eskiyse bot durmuş veya bağlantı kesilmiş olabilir.`,
             inline: false
           }
         )
-        .setFooter({ text: "DS SYSTEM • Sistem Takibi" })
+        .setFooter({ text: "DS SYSTEM • 7/24 Sistem Takibi" })
         .setTimestamp();
 
       await interaction.channel.send({ embeds: [embed] });
@@ -383,7 +384,6 @@ client.on("interactionCreate", async (interaction) => {
       modal.addComponents(new ActionRowBuilder().addComponents(input));
       return interaction.showModal(modal);
     }
-    // PUANLAMA
     if (interaction.customId.startsWith("rate_")) {
       const rating = parseInt(interaction.customId.replace("rate_", ""));
       data.stats.ratings.push(rating);
