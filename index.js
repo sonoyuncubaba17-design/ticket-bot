@@ -18,7 +18,6 @@ const {
 const { joinVoiceChannel } = require('@discordjs/voice');
 const fs = require('fs');
 const path = require('path');
-
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -30,7 +29,6 @@ const client = new Client({
   ],
   partials: [Partials.Channel]
 });
-
 const config = {
   staffRole: process.env.STAFF_ROLE_ID,
   ticketLog: process.env.TICKET_LOG,
@@ -40,7 +38,6 @@ const config = {
   gifUrl: "https://cdn.discordapp.com/attachments/1535074576722296893/1536297715447636048/DS_hizli_kar.gif?ex=6a7ae43e&is=6a7992be&hm=33ccb6b78435399366d2ad31bc4bc95d1a0dcc2287c1aea31b73e30c76cdf2ae&",
   voiceChannelId: "1535776380631916555"
 };
-
 const dataPath = path.join(__dirname, 'data.json');
 let data = {
   blacklist: [],
@@ -48,7 +45,6 @@ let data = {
   history: [],
   ticketCounter: 1000
 };
-
 function loadData() {
   try {
     if (fs.existsSync(dataPath)) {
@@ -58,12 +54,10 @@ function loadData() {
     }
   } catch (e) {}
 }
-
 function saveData() {
   fs.writeFileSync(dataPath, JSON.stringify(data, null, 2));
 }
 loadData();
-
 function createPanelEmbed() {
   return new EmbedBuilder()
     .setColor("#5865F2")
@@ -77,11 +71,11 @@ function createPanelEmbed() {
       "• Sohbete “Yetkili var mı?” yazmak süreci hızlandırmaz\n\n" +
       "Anlayışınız için teşekkürler."
     )
+    .setThumbnail(config.gifUrl) // Sağ üste GIF eklendi
     .setImage(config.gifUrl)
     .setFooter({ text: "DS SYSTEM • Profesyonel Destek Sistemi" })
     .setTimestamp();
 }
-
 function createReminderEmbed() {
   return new EmbedBuilder()
     .setColor("#2b2d31")
@@ -94,7 +88,6 @@ function createReminderEmbed() {
     .setFooter({ text: "DS SYSTEM • Destek Sistemi" })
     .setTimestamp();
 }
-
 function createSelectMenu() {
   return new ActionRowBuilder().addComponents(
     new StringSelectMenuBuilder()
@@ -134,7 +127,6 @@ function createSelectMenu() {
       )
   );
 }
-
 function createHTMLTranscript(channel, messages) {
   let html = `<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8"><title>Transcript</title>
   <style>
@@ -145,7 +137,6 @@ function createHTMLTranscript(channel, messages) {
   </style></head><body>
   <div class="header"><h2>Ticket Transcript - #${channel.name}</h2>
   <p>${new Date().toLocaleString("tr-TR")} • ${messages.size} mesaj</p></div>`;
- 
   [...messages.values()].sort((a,b) => a.createdTimestamp - b.createdTimestamp).forEach(m => {
     const content = m.content ? m.content.replace(/</g,"&lt;").replace(/>/g,"&gt;") : "<em>(dosya/embed)</em>";
     html += `<div class="message">
@@ -156,11 +147,9 @@ function createHTMLTranscript(channel, messages) {
   html += `</body></html>`;
   return Buffer.from(html, 'utf-8');
 }
-
 client.once("ready", async () => {
   console.log(`✅ ${client.user.tag} aktif!`);
   client.user.setActivity("dadascxn 🤍 efecan", { type: 3 });
-
   const guild = client.guilds.cache.get(process.env.GUILD_ID);
   if (guild) {
     const voiceChannel = guild.channels.cache.get(config.voiceChannelId);
@@ -175,7 +164,6 @@ client.once("ready", async () => {
         });
       } catch (e) {}
     }
-
     await guild.commands.set([
       { name: "panel", description: "Ticket panelini gönderir" },
       { name: "hatirlatma", description: "Hatırlatma mesajını gönderir" },
@@ -186,7 +174,6 @@ client.once("ready", async () => {
     ]);
   }
 });
-
 // ========== HOŞ GELDİN ==========
 client.on("guildMemberAdd", async (member) => {
   try {
@@ -206,21 +193,17 @@ client.on("guildMemberAdd", async (member) => {
       .setImage(config.gifUrl)
       .setFooter({ text: "DS SYSTEM • Destek Sistemi" })
       .setTimestamp();
-
     const big = new EmbedBuilder()
       .setColor("#5865F2")
       .setTitle("Hoşgeldin!")
       .setDescription("Sunucumuza hoşgeldin, kuralları okumayı unutma!")
       .setThumbnail(client.user.displayAvatarURL({ dynamic: true }))
       .setImage(config.gifUrl);
-
     await member.send({ embeds: [embed, big] }).catch(() => {});
   } catch (e) {}
 });
-
 client.on("interactionCreate", async (interaction) => {
   if (interaction.isChatInputCommand()) {
-
     // /panel
     if (interaction.commandName === "panel") {
       if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
@@ -232,7 +215,6 @@ client.on("interactionCreate", async (interaction) => {
       });
       return interaction.reply({ content: "Panel gönderildi!", ephemeral: true });
     }
-
     // /hatirlatma (ayrı komut)
     if (interaction.commandName === "hatirlatma") {
       if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
@@ -241,7 +223,6 @@ client.on("interactionCreate", async (interaction) => {
       await interaction.channel.send({ embeds: [createReminderEmbed()] });
       return interaction.reply({ content: "Hatırlatma gönderildi!", ephemeral: true });
     }
-
     if (interaction.commandName === "aktif") {
       if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
         return interaction.reply({ content: "Sadece yöneticiler kullanabilir.", ephemeral: true });
@@ -268,7 +249,6 @@ client.on("interactionCreate", async (interaction) => {
       await interaction.channel.send({ embeds: [embed] });
       return interaction.reply({ content: "Aktif mesajı gönderildi!", ephemeral: true });
     }
-
     if (interaction.commandName === "mesaj") {
       await interaction.deferReply({ ephemeral: true });
       if (!interaction.channel.topic?.startsWith("ticket-")) return interaction.editReply({ content: "Sadece ticket kanalında." });
@@ -295,7 +275,6 @@ client.on("interactionCreate", async (interaction) => {
       }
       return;
     }
-
     if (interaction.commandName === "ekle") {
       await interaction.deferReply({ ephemeral: true });
       if (!interaction.channel.topic?.startsWith("ticket-")) return interaction.editReply({ content: "Sadece ticket kanalında." });
@@ -312,7 +291,6 @@ client.on("interactionCreate", async (interaction) => {
       }
       return;
     }
-
     if (interaction.commandName === "kapat") {
       if (!interaction.channel.topic?.startsWith("ticket-")) {
         return interaction.reply({ content: "Sadece ticket kanalında.", ephemeral: true });
@@ -321,7 +299,6 @@ client.on("interactionCreate", async (interaction) => {
       return;
     }
   }
-
   // ========== SELECT MENU ==========
   if (interaction.isStringSelectMenu()) {
     if (interaction.customId === "ticket_select") {
@@ -341,7 +318,6 @@ client.on("interactionCreate", async (interaction) => {
       return interaction.showModal(modal);
     }
   }
-
   // ========== BUTONLAR ==========
   if (interaction.isButton()) {
     if (interaction.customId === "close_ticket") {
@@ -418,7 +394,6 @@ client.on("interactionCreate", async (interaction) => {
       return;
     }
   }
-
   // ========== MODAL ==========
   if (interaction.isModalSubmit()) {
     if (interaction.customId.startsWith("ticket_modal:")) {
@@ -555,7 +530,6 @@ client.on("interactionCreate", async (interaction) => {
     }
   }
 });
-
 // ========== TICKET KAPATMA ==========
 async function closeTicket(interaction, channel) {
   await interaction.reply({ content: "Ticket kapatılıyor..." });
@@ -610,5 +584,4 @@ async function closeTicket(interaction, channel) {
   saveData();
   setTimeout(() => channel.delete().catch(() => {}), 4000);
 }
-
 client.login(process.env.TOKEN);
