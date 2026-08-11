@@ -36,7 +36,7 @@ const config = {
   categoryId: process.env.CATEGORY_ID,
   ratingLog: "1535549655621042197",
   gifUrl: "https://cdn.discordapp.com/attachments/1535074576722296893/1536297715447636048/DS_hizli_kar.gif?ex=6a7ae43e&is=6a7992be&hm=33ccb6b78435399366d2ad31bc4bc95d1a0dcc2287c1aea31b73e30c76cdf2ae&",
-  thumbnailUrl: "https://cdn.discordapp.com/attachments/1535074576722296893/1536314156737765396/ChatGPT_Image_10_Agu_2026_13_05_54.gif?ex=6a7af38e&is=6a79a20e&hm=a251fef9d525f3c5185b64bc3ddbe29d80caa9b7cee2a27e9f63b921c98c5a42&",
+  thumbnailUrl: "https://cdn.discordapp.com/attachments/1535074576722296893/1536616044347793439/DS_TAM_REFERANS_GIBI_BEYAZ_PATLAMA.gif?ex=6a7c0cb5&is=6a7abb35&hm=e3bf4a1bea50f9e7fd2ff39b00f1e1ae502bf33cab24653f8007e78c62005037",
   voiceChannelId: "1535776380631916555"
 };
 const dataPath = path.join(__dirname, 'data.json');
